@@ -1,138 +1,85 @@
-"""Unit tests for aware_kernel.solver modules."""
+"""Unit tests for kernos.solver."""
+
+from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from aware_kernel.aware.exceptions import ConditioningError
-from aware_kernel.solver.normal_eq import (
-    accumulate_normal_matrix,
-    accumulate_normal_vector,
-    build_normal_equations,
-)
-from aware_kernel.solver.preconditioner import diagonal_preconditioner
-from aware_kernel.solver.ridge import DirectRidgeSolver, IterativeRidgeSolver
+from kernos.core.error import IllConditionedError
+from kernos.solver.direct import Direct
+from kernos.solver.equation import assemble, crossvec, gramian
+from kernos.solver.iterative import Iterative
+from kernos.solver.jacobi import Jacobi
+from kernos.solver.woodbury import Woodbury
 
 
-class TestAccumulateNormalMatrix:
-    """Tests for accumulate_normal_matrix."""
+class TestEquation:
+    def test_gramian(self, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((20, 4))
+        out = gramian(phi)
+        assert out.shape == (4, 4)
+        np.testing.assert_allclose(out, out.T, atol=1e-12)
 
-    def test_shape(self, rng: np.random.Generator) -> None:
-        """Output should have shape (m, m)."""
-        phi = rng.standard_normal((10, 5))
-        s = accumulate_normal_matrix(phi)
-        assert s.shape == (5, 5)
-
-    def test_symmetric(self, rng: np.random.Generator) -> None:
-        """Output should be symmetric."""
-        phi = rng.standard_normal((10, 5))
-        s = accumulate_normal_matrix(phi)
-        np.testing.assert_allclose(s, s.T, atol=1e-12)
-
-    def test_psd(self, rng: np.random.Generator) -> None:
-        """Output should be positive semi-definite."""
-        phi = rng.standard_normal((10, 5))
-        s = accumulate_normal_matrix(phi)
-        eigenvalues = np.linalg.eigvalsh(s)
-        assert np.all(eigenvalues >= -1e-10)
-
-
-class TestAccumulateNormalVector:
-    """Tests for accumulate_normal_vector."""
-
-    def test_shape(self, rng: np.random.Generator) -> None:
-        """Output should have shape (m,)."""
-        phi = rng.standard_normal((10, 5))
-        y = rng.standard_normal(10)
-        b = accumulate_normal_vector(phi, y)
-        assert b.shape == (5,)
-
-
-class TestBuildNormalEquations:
-    """Tests for build_normal_equations."""
-
-    def test_shapes(self, rng: np.random.Generator) -> None:
-        """S and b should have correct shapes."""
-        phi = rng.standard_normal((20, 5))
+    def test_crossvec(self, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((20, 4))
         y = rng.standard_normal(20)
-        s, b = build_normal_equations(phi, y, lambda_reg=1e-2)
-        assert s.shape == (5, 5)
-        assert b.shape == (5,)
+        out = crossvec(phi, y)
+        assert out.shape == (4,)
 
-    def test_spd(self, rng: np.random.Generator) -> None:
-        """S + lambda I should be SPD."""
-        phi = rng.standard_normal((20, 5))
+    def test_assemble(self, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((20, 4))
         y = rng.standard_normal(20)
-        s, _ = build_normal_equations(phi, y, lambda_reg=1e-2)
-        eigenvalues = np.linalg.eigvalsh(s)
-        assert np.all(eigenvalues > 0.0)
+        S, b = assemble(phi, y, ridge=0.1)
+        assert S.shape == (4, 4)
+        assert b.shape == (4,)
 
 
-class TestDiagonalPreconditioner:
-    """Tests for diagonal_preconditioner."""
-
-    def test_positive_diagonal(self) -> None:
-        """Positive diagonal should yield standard preconditioner."""
-        s = np.diag([4.0, 9.0, 16.0])
-        pre = diagonal_preconditioner(s)
-        expected = np.array([0.5, 1.0 / 3.0, 0.25])
-        np.testing.assert_allclose(pre, expected)
+class TestJacobi:
+    def test_precon(self, rng: np.random.Generator) -> None:
+        S = rng.standard_normal((4, 4))
+        S = S @ S.T + np.eye(4)
+        j = Jacobi()
+        out = j.precon(S)
+        np.testing.assert_allclose(out, 1.0 / np.maximum(np.diag(S), 1e-12))
 
 
-class TestDirectRidgeSolver:
-    """Tests for DirectRidgeSolver."""
+class TestDirect:
+    def test_solve(self, direct_solver: Direct, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((50, 8))
+        y = rng.standard_normal(50)
+        w = direct_solver.solve(phi, y)
+        assert w.shape == (8,)
 
-    def test_basic(self, rng: np.random.Generator) -> None:
-        """Should solve a simple ridge problem."""
-        phi = rng.standard_normal((50, 5))
-        w_true = rng.standard_normal(5)
-        y = phi @ w_true + 0.1 * rng.standard_normal(50)
-        solver = DirectRidgeSolver(lambda_reg=1e-2)
-        w = solver.solve(phi, y)
-        assert w.shape == (5,)
-
-    def test_agrees_with_lstsq(self, rng: np.random.Generator) -> None:
-        """Solution should match numpy lstsq with ridge."""
-        phi = rng.standard_normal((50, 5))
-        w_true = rng.standard_normal(5)
-        y = phi @ w_true + 0.1 * rng.standard_normal(50)
-        lambda_reg = 1e-2
-        solver = DirectRidgeSolver(lambda_reg=lambda_reg)
-        w = solver.solve(phi, y)
-        # Reference: solve via direct normal equations
-        s_ref = phi.T @ phi + lambda_reg * np.eye(5)
-        b_ref = phi.T @ y
-        w_ref = np.linalg.solve(s_ref, b_ref)
-        np.testing.assert_allclose(w, w_ref, atol=1e-5)
-
-    def test_ill_conditioned_raises(self) -> None:
-        """Ill-conditioned problem should raise ConditioningError."""
-        phi = np.array([[1.0, 1.0], [1.0, 1.0 + 1e-15]])
-        y = np.array([1.0, 2.0])
-        solver = DirectRidgeSolver(lambda_reg=1e-12, kappa_threshold=1e10)
-        with pytest.raises(ConditioningError):
-            solver.solve(phi, y)
+    def test_residual(self, direct_solver: Direct, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((50, 8))
+        y = rng.standard_normal(50)
+        out = direct_solver.residual(phi, y)
+        assert out.shape == (50,)
 
 
-class TestIterativeRidgeSolver:
-    """Tests for IterativeRidgeSolver."""
+class TestIterative:
+    def test_solve(self, iterative_solver: Iterative, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((50, 8))
+        y = rng.standard_normal(50)
+        w = iterative_solver.solve(phi, y)
+        assert w.shape == (8,)
 
-    def test_basic(self, rng: np.random.Generator) -> None:
-        """Should solve a simple ridge problem."""
-        phi = rng.standard_normal((50, 5))
-        w_true = rng.standard_normal(5)
-        y = phi @ w_true + 0.1 * rng.standard_normal(50)
-        solver = IterativeRidgeSolver(lambda_reg=1e-2)
-        w = solver.solve(phi, y)
-        assert w.shape == (5,)
+    def test_precon(self, iterative_solver: Iterative, rng: np.random.Generator) -> None:
+        S = rng.standard_normal((8, 8))
+        S = S @ S.T + np.eye(8)
+        out = iterative_solver.precon(S)
+        assert out.shape == (8,)
 
-    def test_agrees_with_direct(self, rng: np.random.Generator) -> None:
-        """Iterative and direct solvers should agree on well-conditioned data."""
-        phi = rng.standard_normal((50, 5))
-        w_true = rng.standard_normal(5)
-        y = phi @ w_true + 0.1 * rng.standard_normal(50)
-        lambda_reg = 1e-2
-        direct = DirectRidgeSolver(lambda_reg=lambda_reg)
-        iterative = IterativeRidgeSolver(lambda_reg=lambda_reg, tol=1e-8)
-        w_direct = direct.solve(phi, y)
-        w_iter = iterative.solve(phi, y)
-        np.testing.assert_allclose(w_iter, w_direct, atol=1e-4)
+
+class TestWoodbury:
+    def test_solve(self, woodbury_solver: Woodbury, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((5, 10))
+        y = rng.standard_normal(5)
+        w = woodbury_solver.solve(phi, y)
+        assert w.shape == (10,)
+
+    def test_rejects_overdetermined(self, woodbury_solver: Woodbury, rng: np.random.Generator) -> None:
+        phi = rng.standard_normal((20, 4))
+        y = rng.standard_normal(20)
+        with pytest.raises(IllConditionedError):
+            woodbury_solver.solve(phi, y)

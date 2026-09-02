@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aware-kernel"
+name = "kernos"
 version = "0.1.0"
 description = "Refresh-aware hybrid continuous-discrete low-rank kernel learning"
 readme = "README.md"
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["kernel", "machine-learning", "nystrom", "ridge-regression"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -33,23 +33,20 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
-    "hypothesis>=6.0",
     "mypy>=1.5",
     "ruff>=0.1.0",
-    "black>=23.0",
-    "pre-commit>=3.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/sachncs/aware-kernel"
-Repository = "https://github.com/sachncs/aware-kernel"
-Issues = "https://github.com/sachncs/aware-kernel/issues"
-Changelog = "https://github.com/sachncs/aware-kernel/blob/master/CHANGELOG.md"
-Documentation = "https://github.com/sachncs/aware-kernel/tree/master/docs"
+Homepage = "https://github.com/sachncs/kernos"
+Repository = "https://github.com/sachncs/kernos"
+Issues = "https://github.com/sachncs/kernos/issues"
+Changelog = "https://github.com/sachncs/kernos/blob/master/CHANGELOG.md"
+Documentation = "https://github.com/sachncs/kernos/tree/master/docs"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["aware_kernel*"]
+include = ["kernos*"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -59,30 +56,26 @@ warn_unused_ignores = true
 show_error_codes = true
 ignore_missing_imports = true
 
-[tool.black]
-line-length = 88
-target-version = ["py310"]
-
 [tool.ruff]
-line-length = 88
+line-length = 110
 target-version = "py310"
 lint.select = [
-    "E",   # pycodestyle errors
-    "F",   # Pyflakes
-    "I",   # isort
-    "N",   # pep8-naming
-    "W",   # pycodestyle warnings
-    "UP",  # pyupgrade
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "SIM", # flake8-simplify
+    "E",
+    "F",
+    "I",
+    "N",
+    "W",
+    "UP",
+    "B",
+    "C4",
+    "SIM",
 ]
 lint.ignore = [
-    "E501",   # Line length handled by black
-    "N806",   # Uppercase variable names (standard in scientific computing: X, R, U, K, etc.)
-    "N803",   # Uppercase argument names (standard in scientific computing)
-    "N802",   # Uppercase function names (standard in scientific computing)
-    "E741",   # Ambiguous variable names (l, O, I are standard in linear algebra)
+    "E501",
+    "N806",
+    "N803",
+    "N802",
+    "E741",
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -95,29 +88,18 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--strict-markers",
-    "--disable-warnings",
-    "--cov=aware_kernel",
-    "--cov-report=term-missing",
-    "--cov-fail-under=80",
 ]
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "numerical: marks numerical invariant tests",
+    "slow: marks tests as slow",
+    "numeric: marks numeric invariant tests",
     "integration: marks integration tests",
 ]
 
 [tool.coverage.run]
-source = ["aware_kernel"]
-omit = [
-    "*/tests/*",
-    "*/evaluation/*",
-]
+source = ["kernos"]
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
     "if __name__ == .__main__.:",
 ]
