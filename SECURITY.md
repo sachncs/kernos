@@ -8,8 +8,8 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within aware-kernel, please send an
-email to **[INSERT SECURITY EMAIL]**. All security vulnerabilities will be
+If you discover a security vulnerability within kernos, please send an
+email to **sachncs@gmail.com**. All security vulnerabilities will be
 promptly addressed.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
@@ -44,18 +44,14 @@ disclosure.
 
 ## Security Best Practices
 
-When using aware-kernel in production:
+When using kernos in production:
 
 - Keep dependencies updated (`pip install --upgrade numpy scipy scikit-learn`).
 - Use virtual environments to isolate installations.
 - Review `pyproject.toml` for dependency pinning.
-- Run `safety check` or `pip-audit` regularly to scan for known vulnerabilities.
+- Run `pip-audit` regularly to scan for known vulnerabilities.
 
 ## Scope
 
-This security policy applies to the `aware-kernel` Python package distributed
-via PyPI. It does not apply to:
-
-- Third-party forks or modified versions
-- Code in example scripts (which are for demonstration only)
-- Issues in upstream dependencies (report those to their respective maintainers)
+This security policy applies to the kernos Python package distributed
+via PyPI.

@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 
 from kernos.core.types import Array
-from kernos.basis.nystrom import Nystrom
+from kernos.basis.nystrom import Nystrom as NystromBasis
 from kernos.basis.whitening import Whitening
-from kernos.basis.random import Random
+from kernos.basis.random import Random as RandomBasis
 from kernos.solver.direct import Direct
 from kernos.predict.predict import Predict
 
@@ -22,14 +22,14 @@ class Baseline:
         raise NotImplementedError
 
 
-class RidgeBaseline(Baseline):
+class Ridge(Baseline):
     """Plain ridge regression on raw inputs."""
 
     def __init__(self, ridge: float = 1e-3) -> None:
         self.ridge = ridge
         self.predictor: Predict | None = None
 
-    def fit(self, X: Array, y: Array) -> "RidgeBaseline":
+    def fit(self, X: Array, y: Array) -> "Ridge":
         solver = Direct(self.ridge, 1e-10, 5, 10.0, 1.0, 1e12)
         weights = solver.solve(X, y)
         self.predictor = Predict(weights=weights)
@@ -39,7 +39,7 @@ class RidgeBaseline(Baseline):
         return self.predictor.forward(X)
 
 
-class NystromBaseline(Baseline):
+class Nystrom(Baseline):
     """Nyström ridge regression."""
 
     def __init__(self, mbasis: int = 512, ridge: float = 1e-3, seed: int | None = None, gamma: float = 1.0) -> None:
@@ -48,12 +48,12 @@ class NystromBaseline(Baseline):
         self.seed = seed
         self.gamma = gamma
         self.predictor: Predict | None = None
-        self.basis: Nystrom | None = None
+        self.basis: NystromBasis | None = None
 
-    def fit(self, X: Array, y: Array) -> "NystromBaseline":
+    def fit(self, X: Array, y: Array) -> "Nystrom":
         rng = np.random.default_rng(self.seed)
         whitening = Whitening(1e-6, 1e-5, 1e-8)
-        basis = Nystrom.fromdata(X, self.mbasis, whitening, rng, gamma=self.gamma)
+        basis = NystromBasis.fromdata(X, self.mbasis, whitening, rng, gamma=self.gamma)
         phig = basis.forward(X)
         solver = Direct(self.ridge, 1e-10, 5, 10.0, 1.0, 1e12)
         weights = solver.solve(phig, y)
@@ -65,7 +65,7 @@ class NystromBaseline(Baseline):
         return self.predictor.forward(self.basis.forward(X))
 
 
-class RandomBaseline(Baseline):
+class Random(Baseline):
     """Random Fourier feature ridge regression."""
 
     def __init__(self, mfeat: int = 1000, gamma: float = 1.0, ridge: float = 1e-3, seed: int | None = None) -> None:
@@ -74,11 +74,11 @@ class RandomBaseline(Baseline):
         self.ridge = ridge
         self.seed = seed
         self.predictor: Predict | None = None
-        self.basis: Random | None = None
+        self.basis: RandomBasis | None = None
 
-    def fit(self, X: Array, y: Array) -> "RandomBaseline":
+    def fit(self, X: Array, y: Array) -> "Random":
         rng = np.random.default_rng(self.seed)
-        basis = Random.fromdata(X.shape[1], self.mfeat, rng, gamma=self.gamma)
+        basis = RandomBasis.fromdata(X.shape[1], self.mfeat, rng, gamma=self.gamma)
         phig = basis.forward(X)
         solver = Direct(self.ridge, 1e-10, 5, 10.0, 1.0, 1e12)
         weights = solver.solve(phig, y)

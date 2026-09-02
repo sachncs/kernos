@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kernos.bench.baseline import NystromBaseline, RandomBaseline, RidgeBaseline
+from kernos.bench.baseline import Nystrom, Random, Ridge
 from kernos.bench.dataset import hetero, highdim, linear, poly, split
 from kernos.bench.metric import allmetrics, mae, maxerr, r2, rmse
 from kernos.bench.runner import Report, Runner
@@ -73,21 +73,21 @@ class TestDataset:
 class TestBaselines:
     def test_ridge(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        m = RidgeBaseline(ridge=1e-2)
+        m = Ridge(ridge=1e-2)
         m.fit(X, y)
         yhat = m.predict(X)
         assert yhat.shape == y.shape
 
     def test_nystrom(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        m = NystromBaseline(mbasis=16, ridge=1e-2, seed=42)
+        m = Nystrom(mbasis=16, ridge=1e-2, seed=42)
         m.fit(X, y)
         yhat = m.predict(X)
         assert yhat.shape == y.shape
 
     def test_random(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        m = RandomBaseline(mfeat=64, ridge=1e-2, seed=42)
+        m = Random(mfeat=64, ridge=1e-2, seed=42)
         m.fit(X, y)
         yhat = m.predict(X)
         assert yhat.shape == y.shape
@@ -98,7 +98,7 @@ class TestRunner:
         X, y = synthetic
         Xtr, Xte, ytr, yte = split(X, y, 0.2, np.random.default_rng(0))
         runner = Runner()
-        r = runner.run("ridge", RidgeBaseline(ridge=1e-2), Xtr, ytr, Xte, yte)
+        r = runner.run("ridge", Ridge(ridge=1e-2), Xtr, ytr, Xte, yte)
         assert r.name == "ridge"
         assert r.rmse >= 0
 
@@ -106,7 +106,7 @@ class TestRunner:
         X, y = synthetic
         Xtr, Xte, ytr, yte = split(X, y, 0.2, np.random.default_rng(0))
         runner = Runner()
-        out = runner.suite({"a": RidgeBaseline(), "b": RidgeBaseline()}, Xtr, ytr, Xte, yte)
+        out = runner.suite({"a": Ridge(), "b": Ridge()}, Xtr, ytr, Xte, yte)
         assert len(out) == 2
 
     def test_format(self) -> None:
