@@ -171,7 +171,8 @@ class Kernos(BaseEstimator, RegressorMixin):
             raise RuntimeError("Kernos is not fitted yet; call fit() first.")
         X = np.asarray(X, dtype=np.float64)
         bundle: Bundle = self.bundle_
-        _, phi, _, _ = self.loop_.features(bundle, X)
+        loop = self.loop_ if self.loop_ is not None else Loop(self.plan_)
+        _, phi, _, _ = loop.features(bundle, X)
         return self.predictor_.forward(phi)
 
     def score(self, X: np.ndarray, y: np.ndarray) -> float:
