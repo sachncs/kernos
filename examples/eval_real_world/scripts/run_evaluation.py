@@ -1,4 +1,4 @@
-"""Main evaluation script for aware-kernel real-world experiments.
+"""Main evaluation script for kernos real-world experiments.
 
 Usage:
     cd examples/eval_real_world
@@ -35,18 +35,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from data_loaders.loaders import DATASET_LOADERS
 
-from aware_kernel import AwareKernelEstimator
-from aware_kernel.aware.config import (
-    AblationConfig,
-    MemoryMode,
-)
-from aware_kernel.evaluation.baselines import (
-    NystromRidgeBaseline,
-    RandomFeatureBaseline,
-    RidgeBaseline,
-)
-from aware_kernel.evaluation.metrics import compute_all_metrics
-from aware_kernel.training.loop import TrainingLoop
+from kernos import Kernos
+from kernos.bench.baseline import Nystrom as NystromBaseline
+from kernos.bench.baseline import Random as RandomFeatureBaseline
+from kernos.bench.baseline import Ridge as RidgeBaseline
+from kernos.bench.metric import allmetrics
+from kernos.core.plan import Buffer
 
 
 # ---------------------------------------------------------------------------
@@ -57,13 +51,13 @@ class BudgetTier:
     """Preset budget tier for evaluation."""
 
     name: str
-    m_g: int
-    m_l: int
-    max_steps: int
-    embedding_dim: int
+    mbasis: int
+    abasis: int
+    steps: int
+    dim: int
     total_refresh_budget: float
     refresh_cost: float
-    memory_mode: MemoryMode = MemoryMode.CACHED
+    mode: Buffer = Buffer.FULL
 
 
 SMALL = BudgetTier("Small", 128, 32, 200, 16, 5.0, 1.0)
@@ -158,59 +152,60 @@ class ExperimentResult:
 # ---------------------------------------------------------------------------
 # Model factories
 # ---------------------------------------------------------------------------
-def make_aware_kernel(
+def make_kernos(
     tier: BudgetTier,
-    lambda_reg: float,
+    ridge: float,
     seed: int,
-    ablation: AblationConfig | None = None,
-) -> AwareKernelEstimator:
-    return AwareKernelEstimator(
-        embedding_dim=tier.embedding_dim,
-        m_g=tier.m_g,
-        m_l=tier.m_l,
-        lambda_reg=lambda_reg,
-        memory_mode=tier.memory_mode.value,
-        max_steps=tier.max_steps,
-        eval_freq=max(1, tier.max_steps // 20),
+    ablation: dict[str, bool] | None = None,
+) -> Kernos:
+    """Construct a Kernos estimator configured for a budget tier.
+
+    ``ablation`` is an optional mapping of Plan flags (``noref``, ``nohyst``,
+    ``nocool``, ``noresid``, ``noorth``, ``nodiv``, ``nofreeze``) to booleans.
+    Unspecified flags default to ``False``.
+    """
+    ab = ablation or {}
+    return Kernos(
+        dim=tier.dim,
+        mbasis=tier.mbasis,
+        abasis=tier.abasis,
+        ridge=ridge,
+        mode=tier.mode,
+        steps=tier.steps,
+        eval_every=max(1, tier.steps // 20),
         seed=seed,
-        total_refresh_budget=tier.total_refresh_budget,
-        refresh_cost=tier.refresh_cost,
+        budget=tier.total_refresh_budget,
+        rcost=tier.refresh_cost,
         lr=1e-4,
-        lambda_r=1e-4,
-        lambda_orth=1e-4,
-        gamma_div=1e-3,
-        fd_epsilon=1e-5,
-        disable_refresh=ablation.disable_refresh if ablation else False,
-        disable_hysteresis=ablation.disable_hysteresis if ablation else False,
-        disable_cooldown=ablation.disable_cooldown if ablation else False,
-        disable_residual_aware_anchors=(
-            ablation.disable_residual_aware_anchors if ablation else False
-        ),
-        disable_orthogonalization=(
-            ablation.disable_orthogonalization if ablation else False
-        ),
-        disable_diversity_penalty=(
-            ablation.disable_diversity_penalty if ablation else False
-        ),
-        static_scaling=ablation.static_scaling if ablation else False,
+        wr=1e-4,
+        worth=1e-4,
+        wdiv=1e-3,
+        fdeps=1e-5,
+        noref=ab.get("noref", False),
+        nohyst=ab.get("nohyst", False),
+        nocool=ab.get("nocool", False),
+        noresid=ab.get("noresid", False),
+        noorth=ab.get("noorth", False),
+        nodiv=ab.get("nodiv", False),
+        nofreeze=ab.get("nofreeze", False),
     )
 
 
 def make_nystrom(
-    tier: BudgetTier, lambda_reg: float, seed: int
-) -> NystromRidgeBaseline:
-    return NystromRidgeBaseline(m_g=tier.m_g, lambda_reg=lambda_reg, seed=seed)
+    tier: BudgetTier, ridge: float, seed: int
+) -> NystromBaseline:
+    return NystromBaseline(mbasis=tier.mbasis, ridge=ridge, seed=seed)
 
 
-def make_rff(tier: BudgetTier, lambda_reg: float, seed: int) -> RandomFeatureBaseline:
-    n_features = min(2000, max(tier.m_g, 512))
+def make_rff(tier: BudgetTier, ridge: float, seed: int) -> RandomFeatureBaseline:
+    n_features = min(2000, max(tier.mbasis, 512))
     return RandomFeatureBaseline(
-        n_features=n_features, gamma=1.0, lambda_reg=lambda_reg, seed=seed
+        mfeat=n_features, gamma=1.0, ridge=ridge, seed=seed
     )
 
 
-def make_ridge(lambda_reg: float) -> RidgeBaseline:
-    return RidgeBaseline(lambda_reg=lambda_reg)
+def make_ridge(ridge: float) -> RidgeBaseline:
+    return RidgeBaseline(ridge=ridge)
 
 
 # ---------------------------------------------------------------------------
@@ -243,25 +238,21 @@ def tune_lambda_reg(
 # Condition proxy
 # ---------------------------------------------------------------------------
 def compute_condition_proxy(
-    estimator: AwareKernelEstimator, X: np.ndarray, lambda_reg: float
+    estimator: Kernos, X: np.ndarray, ridge: float
 ) -> float:
-    if estimator.state_ is None or estimator.state_.w is None:
+    """Compute ``cond(Phi^T Phi + ridge I)`` as a condition-proxy diagnostic."""
+    bundle = getattr(estimator, "bundle_", None)
+    if bundle is None or bundle.weights is None:
         return float("inf")
-    loop = TrainingLoop(estimator.config_)
-    embedder = (
-        estimator.state_.continuous.theta.get("embedder")
-        if estimator.state_.continuous.theta
-        else None
-    )
-    if embedder is None:
+    embed = bundle.continuous.theta
+    if embed is None:
         return float("inf")
-    embeddings = embedder.embed(X)
-    from aware_kernel.embedding.projector import Projector
+    from kernos.loop.loop import Loop
 
-    projector = Projector(estimator.state_.continuous.R)
-    U = projector.transform(embeddings)
-    phi = loop._build_fused_features(U, estimator.state_.discrete)
-    gram = phi.T @ phi + lambda_reg * np.eye(phi.shape[1])
+    loop = Loop(estimator.plan_)
+    embeddings = embed.forward(X)
+    _, phi, _, _ = loop.features(bundle, X)
+    gram = phi.T @ phi + ridge * np.eye(phi.shape[1])
     try:
         eigs = np.linalg.eigvalsh(gram)
         return float(np.max(eigs) / (np.min(eigs) + 1e-15))
@@ -272,8 +263,8 @@ def compute_condition_proxy(
 # ---------------------------------------------------------------------------
 # Execution helpers
 # ---------------------------------------------------------------------------
-def run_single_aware_kernel(
-    model: AwareKernelEstimator, X_train, y_train, X_test, y_test
+def run_single_kernos(
+    model: Kernos, X_train, y_train, X_test, y_test
 ) -> SingleRunResult:
     tracemalloc.start()
     t0 = time.perf_counter()
@@ -286,9 +277,9 @@ def run_single_aware_kernel(
     y_pred = model.predict(X_test)
     predict_time = time.perf_counter() - t0
 
-    metrics = compute_all_metrics(y_test, y_pred)
-    cond = compute_condition_proxy(model, X_test, model.lambda_reg)
-    refresh_count = 1 if model.state_ and model.state_.discrete.t_r > 0 else 0
+    metrics = allmetrics(y_test, y_pred)
+    cond = compute_condition_proxy(model, X_test, model.ridge)
+    refresh_count = 1 if model.bundle_ and model.bundle_.discrete.tlast > 0 else 0
 
     return SingleRunResult(
         rmse=metrics["rmse"],
@@ -314,7 +305,7 @@ def run_single_baseline(model, X_train, y_train, X_test, y_test) -> SingleRunRes
     y_pred = model.predict(X_test)
     predict_time = time.perf_counter() - t0
 
-    metrics = compute_all_metrics(y_test, y_pred)
+    metrics = allmetrics(y_test, y_pred)
     return SingleRunResult(
         rmse=metrics["rmse"],
         mae=metrics["mae"],
@@ -325,6 +316,20 @@ def run_single_baseline(model, X_train, y_train, X_test, y_test) -> SingleRunRes
         refresh_count=0,
         condition_proxy=float("nan"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Ablation presets
+# ---------------------------------------------------------------------------
+ABLATION_PRESETS: dict[str, dict[str, bool]] = {
+    "K-NoRefresh": {"noref": True},
+    "K-NoHysteresis": {"nohyst": True},
+    "K-NoCooldown": {"nocool": True},
+    "K-NoResidAnchors": {"noresid": True},
+    "K-NoOrthog": {"noorth": True},
+    "K-NoDivPenalty": {"nodiv": True},
+    "K-NoFreeze": {"nofreeze": True},
+}
 
 
 # ---------------------------------------------------------------------------
@@ -340,21 +345,21 @@ def run_experiment_suite(
 ) -> list[ExperimentResult]:
     results: list[ExperimentResult] = []
 
-    # AwareKernel full
-    exp = ExperimentResult(dataset=dataset_name, model="AwareKernel", tier=tier.name)
+    # Kernos full
+    exp = ExperimentResult(dataset=dataset_name, model="Kernos", tier=tier.name)
     for seed in seeds:
         rng = np.random.default_rng(seed)
         X_tr, X_val, X_te, y_tr, y_val, y_te = preprocess_and_split(X, y, rng)
         best_lam = tune_lambda_reg(
-            lambda lam, _seed=seed: make_aware_kernel(tier, lam, _seed),
+            lambda lam, _seed=seed: make_kernos(tier, lam, _seed),
             X_tr,
             y_tr,
             X_val,
             y_val,
             lambdas=[1e-4, 1e-3, 1e-2, 1e-1],
         )
-        model = make_aware_kernel(tier, best_lam, seed)
-        exp.runs.append(run_single_aware_kernel(model, X_tr, y_tr, X_te, y_te))
+        model = make_kernos(tier, best_lam, seed)
+        exp.runs.append(run_single_kernos(model, X_tr, y_tr, X_te, y_te))
     results.append(exp)
 
     # Baselines
@@ -382,22 +387,13 @@ def run_experiment_suite(
 
     # Ablations
     if run_ablations:
-        ablation_configs = {
-            "AK-NoRefresh": AblationConfig(disable_refresh=True),
-            "AK-NoHysteresis": AblationConfig(disable_hysteresis=True),
-            "AK-NoCooldown": AblationConfig(disable_cooldown=True),
-            "AK-NoResidAnchors": AblationConfig(disable_residual_aware_anchors=True),
-            "AK-NoOrthog": AblationConfig(disable_orthogonalization=True),
-            "AK-NoDivPenalty": AblationConfig(disable_diversity_penalty=True),
-            "AK-StaticScaling": AblationConfig(static_scaling=True),
-        }
-        for abname, abcfg in ablation_configs.items():
+        for abname, abcfg in ABLATION_PRESETS.items():
             exp = ExperimentResult(dataset=dataset_name, model=abname, tier=tier.name)
             for seed in seeds:
                 rng = np.random.default_rng(seed)
                 X_tr, X_val, X_te, y_tr, y_val, y_te = preprocess_and_split(X, y, rng)
                 best_lam = tune_lambda_reg(
-                    lambda lam, _seed=seed, _abcfg=abcfg: make_aware_kernel(
+                    lambda lam, _seed=seed, _abcfg=abcfg: make_kernos(
                         tier, lam, _seed, ablation=_abcfg
                     ),
                     X_tr,
@@ -406,8 +402,8 @@ def run_experiment_suite(
                     y_val,
                     lambdas=[1e-4, 1e-3, 1e-2, 1e-1],
                 )
-                model = make_aware_kernel(tier, best_lam, seed, ablation=abcfg)
-                exp.runs.append(run_single_aware_kernel(model, X_tr, y_tr, X_te, y_te))
+                model = make_kernos(tier, best_lam, seed, ablation=abcfg)
+                exp.runs.append(run_single_kernos(model, X_tr, y_tr, X_te, y_te))
             results.append(exp)
 
     return results
@@ -446,7 +442,7 @@ def stability_to_markdown(results: list[ExperimentResult]) -> str:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run aware-kernel evaluation suite.")
+    parser = argparse.ArgumentParser(description="Run kernos evaluation suite.")
     parser.add_argument(
         "--datasets", nargs="+", default=["Diabetes"], help="Dataset names or 'all'."
     )
