@@ -1,10 +1,10 @@
 # Architecture
 
-This document describes the architecture of aware-kernel, its module structure, and key design decisions.
+This document describes the architecture of kernos, its module structure, and key design decisions.
 
 ## Overview
 
-AwareKernel implements **refresh-aware hybrid continuous-discrete low-rank kernel learning**. The method separates model parameters into two groups:
+Kernos implements **refresh-aware hybrid continuous-discrete low-rank kernel learning**. The method separates model parameters into two groups:
 
 - **Continuous parameters** (`theta`, `R`): Updated every training step via gradient descent.
 - **Discrete parameters** (`Z`, `A`, `M_g`, `c_g`, `c_l`, `d`): Refreshed only when drift exceeds a threshold.
@@ -14,20 +14,22 @@ This hybrid approach makes the method efficient for streaming/large-batch settin
 ## Module Map
 
 ```
-aware_kernel/
-├── aware/              # Core types, config, state, exceptions
-├── embedding/          # Dense embedder and projection matrix
-├── global_basis/       # Nyström landmark selection and whitening
-├── local_corrective/   # Anchor sampling, sparse features, orthogonalization
-├── fusion/             # Calibration, gating, fused feature building
-├── solver/             # Ridge regression (Cholesky / PCG)
-├── memory/             # Cached and streamed normal-equation accumulators
-├── refresh/            # Drift, budget, controller, refresh pipeline
-├── training/           # Training loop, objectives, callbacks
-├── inference/          # Mean and variance prediction
-├── evaluation/         # Datasets, baselines, metrics, experiment runner
-├── utils/              # Linear algebra, numerics, sampling utilities
-└── api.py              # Sklearn-compatible public API
+kernos/
+├── core/               # Types, errors, frozen Plan + state containers
+├── embed/              # Dense embedders and projection matrix
+├── basis/              # Nyström landmarks, whitening, random features
+├── correct/            # Anchor sampling, RBF, orthogonalization
+├── fuse/               # Calibration, gate, fused-feature builder
+├── solver/             # Ridge regression (direct + iterative + Jacobi + Woodbury)
+├── cache/              # Full / Stream / Adaptive normal-equation accumulators
+├── policy/             # Drift, budget, refresh controller, policy
+├── loop/               # Training loop, callbacks, outer-step, loss
+├── predict/            # Mean prediction
+├── bench/              # Datasets, baselines, metrics, experiment runner
+├── numeric.py          # Eigenvalue clip, soft truncation, chol, pcg, drift
+├── linalg.py           # Linear-algebra helpers
+├── sample.py           # k-means++, farthest-point sampling
+└── estimator.py        # Sklearn-compatible Kernos estimator
 ```
 
 ## Pipeline
@@ -144,7 +146,7 @@ Implement the `RefreshPolicy` protocol and replace the default `should_refresh` 
 
 ### GPU Solver
 
-Replace `DirectRidgeSolver` with a CuPy-backed solver that implements the `RidgeSolver` protocol. The `TrainingLoop` and `AwareKernelEstimator` will work unchanged.
+Replace `DirectRidgeSolver` with a CuPy-backed solver that implements the `RidgeSolver` protocol. The `Loop` and `Kernos` will work unchanged.
 
 ## Testing Strategy
 
@@ -153,7 +155,7 @@ The test suite is organized in three tiers:
 | Tier | Directory | Purpose |
 |------|-----------|---------|
 | Unit | `tests/unit/` | Shapes, API contracts, error paths, basic correctness |
-| Numerical | `tests/numerical/` | Paper invariants (PSD, SPD, rank bounds, orthogonality) |
+| Numerical | `tests/numeric/` | Paper invariants (PSD, SPD, rank bounds, orthogonality) |
 | Integration | `tests/integration/` | End-to-end parity, refresh behavior, convergence |
 
 Coverage is enforced at 80% (currently ~91% on full runs).

@@ -1,13 +1,13 @@
 # Deployment
 
-This document covers how to build, test, and publish aware-kernel.
+This document covers how to build, test, and publish kernos.
 
 ## Local Development
 
 ```bash
 # Clone and install
-git clone https://github.com/sachncs/aware-kernel.git
-cd aware-kernel
+git clone https://github.com/sachncs/kernos.git
+cd kernos
 pip install -e ".[dev]"
 
 # Run tests
@@ -16,7 +16,7 @@ pytest tests/ -v -p no:asyncio
 # Run linters
 ruff check .
 black --check .
-mypy --strict aware_kernel/
+mypy --strict kernos/
 ```
 
 ## Building Distribution
@@ -36,8 +36,8 @@ This creates:
 
 ```
 dist/
-├── aware_kernel-0.1.0-py3-none-any.whl
-└── aware_kernel-0.1.0.tar.gz
+├── kernos-0.1.0-py3-none-any.whl
+└── kernos-0.1.0.tar.gz
 ```
 
 ## Publishing to PyPI
@@ -49,7 +49,7 @@ dist/
 twine upload --repository testpypi dist/*
 
 # Test installation
-pip install --index-url https://test.pypi.org/simple/ aware-kernel
+pip install --index-url https://test.pypi.org/simple/ kernos
 ```
 
 ### Production PyPI
@@ -72,7 +72,7 @@ export TWINE_PASSWORD=pypi-your-api-token-here
 ## Release Checklist
 
 1. Update version in:
-   - `aware_kernel/_version.py`
+   - `kernos/_version.py`
    - `pyproject.toml`
 2. Update `CHANGELOG.md` with release date
 3. Create a git tag:
@@ -93,7 +93,7 @@ This project follows [Semantic Versioning](https://semver.org/):
 - **MINOR**: New functionality in a backwards-compatible manner
 - **PATCH**: Backwards-compatible bug fixes
 
-The version is tracked in `aware_kernel/_version.py` and referenced by `pyproject.toml`.
+The version is tracked in `kernos/_version.py` and referenced by `pyproject.toml`.
 
 ## Continuous Publishing
 

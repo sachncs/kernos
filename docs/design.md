@@ -1,11 +1,11 @@
 # Design Document
 
 This document describes the architecture, invariants, and extension points of
-the aware-kernel implementation.
+the kernos implementation.
 
 ## Overview
 
-AwareKernel is a hybrid continuous-discrete learner for large-scale kernel
+Kernos is a hybrid continuous-discrete learner for large-scale kernel
 regression. The key idea is to separate representation parameters (continuous:
 `theta`, `R`) from basis parameters (discrete: `Z`, `A`, `M_g`, `c_g`, `c_l`,
 `d`). Continuous parameters are updated every step; discrete parameters are
@@ -14,80 +14,87 @@ for streaming or large-batch settings.
 
 ## Module Map
 
-### `aware_kernel.aware`
+### `kernos.core`
 
-Central configuration (`TrainingConfig`), state containers (`FullState`),
-shared protocols (`Embedder`, `RidgeSolver`), and domain exceptions.
+Frozen configuration (`Plan`), state containers (`Continuous`, `Discrete`,
+`Bundle`), shared types and protocols, and domain exceptions.
 
-### `aware_kernel.embedding`
+### `kernos.embed`
 
-- `DenseEmbedder`: Maps input `x` to a dense continuous embedding.
+- `Linear`, `Identity`, `Kernel`: Maps input `x` to a dense continuous embedding.
 - `Projector`: Applies the learned projection matrix `R` to embeddings.
 
-### `aware_kernel.global_basis`
+### `kernos.basis`
 
-- `NystromGlobalBasis`: Selects landmarks `Z` and builds a whitened global
-  feature map `phi_g(u) = k(u, Z) M_g`.
-- `build_whitening_map`: Implements soft-truncated spectral whitening with
+- `Nystrom`: Selects landmarks `Z` and builds a whitened global feature map
+  `phi_g(u) = k(u, Z) M_g`.
+- `Whitening`: Implements soft-truncated spectral whitening with
   eigenvalue clipping and epsilon scaling.
+- `Random`: Random Fourier feature map.
+- `Greedy`: Greedy landmark selector.
 
-### `aware_kernel.local_corrective`
+### `kernos.correct`
 
-- `residual_aware_sample`: Chooses anchors `A` by blending coverage and residual
-  weights.
-- `compute_sparse_features`: Builds k-NN sparse radial features.
-- `orthogonalize_local_features`: Projects local features into the global
+- `Sampler`: Chooses anchors `A` by blending coverage and residual weights.
+- `Rbf`: Builds k-NN sparse radial features.
+- `Orth` (`Ridge`, `Tikhonov`): Projects local features into the global
   nullspace: `Phi_l_perp = (I - P_g) Phi_l`.
 
-### `aware_kernel.fusion`
+### `kernos.fuse`
 
-- `FusedFeatureBuilder`: Calibrates and gates global and local features:
+- `Fuse`: Calibrates and gates global and local features:
   `phi = [sqrt(rho) * c_g * phi_g, sqrt(1-rho) * c_l * phi_l_perp]`.
-- `compute_gate`: Logistic sigmoid gate `rho = sigma(a)`.
+- `Gate`: Logistic sigmoid gate `rho = sigma(a)`.
+- `Scaler`: Trace-based feature normalization.
 
-### `aware_kernel.solver`
+### `kernos.solver`
 
-- `DirectRidgeSolver`: Solves normal equations via Cholesky with conditioning
+- `Direct`: Solves normal equations via Cholesky with conditioning
   checks and jitter fallback.
-- `IterativeRidgeSolver`: PCG with diagonal preconditioner for large `m`.
+- `Iterative`: PCG with diagonal preconditioner for large `m`.
+- `Woodbury`: Low-rank Woodbury solve.
+- `Jacobi`: Diagonal Jacobi preconditioner.
 
-### `aware_kernel.memory`
+### `kernos.cache`
 
-- `CachedMemoryAccumulator`: Stores `Phi` explicitly; normal equations via
+- `Full`: Stores `Phi` explicitly; normal equations via
   matrix multiplication (`O(nm)`).
-- `StreamedMemoryAccumulator`: Accumulates `S = Phi^T Phi` and `b = Phi^T y`
+- `Stream`: Accumulates `S = Phi^T Phi` and `b = Phi^T y`
   directly (`O(m^2)`).
+- `Adaptive`: Switches between `Full` and `Stream` based on a sample count.
 
-### `aware_kernel.refresh`
+### `kernos.policy`
 
-- `compute_drift`: Measures representation drift.
-- `should_refresh`: Evaluates trigger conditions (drift, cooldown, warmup,
-  hysteresis, budget).
-- `run_refresh_pipeline`: Full discrete refresh from projected embeddings.
+- `Budget`: Budget accountant.
+- `Policy`: Refresh trigger policy combining drift, cooldown, warmup,
+  hysteresis, and budget.
+- `Refresh`: Full discrete refresh pipeline from projected embeddings.
+- `drift` (`Frobenius`, `Spectral`): Drift metrics.
 
-### `aware_kernel.training`
+### `kernos.loop`
 
-- `TrainingLoop`: Main loop integrating initialization, continuous updates,
+- `Loop`: Main loop integrating initialization, continuous updates,
   refresh decisions, and evaluation.
-- `objectives.py`: Outer-loop bilevel objectives including ridge loss,
+- `Outerstep`: Outer-loop bilevel step including ridge loss,
   orthogonality penalty, and diversity penalty.
-- `callbacks.py`: Logging and checkpoint hooks.
+- `Callback` (`Log`, `Snapshot`, `Profile`): Logging and checkpoint hooks.
+- `Loss`: Outer-loop loss terms.
 
-### `aware_kernel.inference`
+### `kernos.predict`
 
-- `Predictor`: Stateful mean and variance prediction from fused features.
+- `Predict`: Mean prediction from fused features.
 
-### `aware_kernel.evaluation`
+### `kernos.bench`
 
-- `datasets.py`: Synthetic benchmarks (linear, polynomial, high-dimensional,
+- `dataset.py`: Synthetic benchmarks (linear, polynomial, high-dimensional,
   heteroscedastic).
-- `baselines.py`: Ridge, Nyström ridge, and random Fourier feature baselines.
-- `metrics.py`: RMSE, MAE, R^2, and max absolute error.
+- `baseline.py`: Ridge, Nyström ridge, and random Fourier feature baselines.
+- `metric.py`: RMSE, MAE, R^2, and max absolute error.
 - `runner.py`: Reproducible experiment runner with timing.
 
-### `aware_kernel.api`
+### `kernos.estimator`
 
-- `AwareKernelEstimator`: Sklearn-compatible public API wrapping `TrainingLoop`.
+- `Kernos`: Sklearn-compatible public API wrapping `Loop`.
 
 ## Key Design Decisions
 
@@ -144,8 +151,8 @@ alternative sampling or whitening strategies.
 
 ### Custom Embedder
 
-Implement the `Embedder` protocol and pass it into a custom `TrainingLoop`
-initializer (or extend `AwareKernelEstimator` to accept an embedder factory).
+Implement the `Embedder` protocol and pass it into a custom `Loop`
+initializer (or extend `Kernos` to accept an embedder factory).
 
 ### Alternative Refresh Policy
 
@@ -155,7 +162,7 @@ Implement the `RefreshPolicy` protocol and replace the default
 ### GPU Solver
 
 Replace `DirectRidgeSolver` with a CuPy-backed solver that implements the
-`RidgeSolver` protocol. The `TrainingLoop` and `AwareKernelEstimator` will
+`RidgeSolver` protocol. The `Loop` and `Kernos` will
 work unchanged.
 
 ## Testing Strategy
@@ -164,7 +171,7 @@ The test suite is organized in three tiers:
 
 1. **Unit tests** (`tests/unit/`): Verify shapes, API contracts, error paths,
    and basic correctness for every public function.
-2. **Numerical invariant tests** (`tests/numerical/`): Verify paper guarantees
+2. **Numerical invariant tests** (`tests/numeric/`): Verify paper guarantees
    (PSD, SPD, rank bounds, orthogonality, calibration stability) with
    randomized inputs and tight tolerances.
 3. **Integration tests** (`tests/integration/`): End-to-end parity,

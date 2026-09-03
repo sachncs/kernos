@@ -2,21 +2,21 @@
 
 ## General
 
-### What is AwareKernel?
+### What is Kernos?
 
-AwareKernel is a research implementation of **refresh-aware hybrid continuous-discrete low-rank kernel learning** for scalable, adaptive kernel regression. It combines a continuously updated embedding projection with a discrete refresh pipeline for the kernel basis.
+Kernos is a research implementation of **refresh-aware hybrid continuous-discrete low-rank kernel learning** for scalable, adaptive kernel regression. It combines a continuously updated embedding projection with a discrete refresh pipeline for the kernel basis.
 
-### When should I use AwareKernel?
+### When should I use Kernos?
 
-AwareKernel is designed for:
+Kernos is designed for:
 - Large-scale kernel regression where standard Nyström methods are too slow
 - Streaming or online learning settings where data arrives sequentially
 - Problems requiring adaptive kernel basis updates without full recomputation
 - Research into hybrid continuous-discrete learning methods
 
-### How does AwareKernel compare to standard Nyström ridge regression?
+### How does Kernos compare to standard Nyström ridge regression?
 
-Standard Nyström methods rebuild the kernel basis from scratch each time. AwareKernel separates continuous parameters (updated every step) from discrete parameters (refreshed only when drift exceeds a threshold). This makes it much more efficient for streaming settings.
+Standard Nyström methods rebuild the kernel basis from scratch each time. Kernos separates continuous parameters (updated every step) from discrete parameters (refreshed only when drift exceeds a threshold). This makes it much more efficient for streaming settings.
 
 ## Installation
 
@@ -33,8 +33,8 @@ Python 3.10, 3.11, and 3.12 are officially supported and tested in CI.
 ### How do I install for development?
 
 ```bash
-git clone https://github.com/sachncs/aware-kernel.git
-cd aware-kernel
+git clone https://github.com/sachncs/kernos.git
+cd kernos
 pip install -e ".[dev]"
 ```
 
@@ -64,7 +64,7 @@ Ablation flags disable specific components for ablation studies:
 Pass `seed=<integer>` to the constructor:
 
 ```python
-model = AwareKernelEstimator(seed=42)
+model = Kernos(seed=42)
 ```
 
 ### Can I use custom embedding functions?
@@ -72,7 +72,7 @@ model = AwareKernelEstimator(seed=42)
 Yes. Implement the `Embedder` protocol and use it with a custom `TrainingLoop`:
 
 ```python
-from aware_kernel.aware.types import Embedder
+from kernos.core.types import Array
 
 class MyEmbedder:
     def embed(self, X: np.ndarray) -> np.ndarray:
