@@ -62,23 +62,23 @@ def plot_pareto_fronts(rows: list[dict], output_dir: Path) -> None:
 
 
 def plot_ablation_bars(rows: list[dict], output_dir: Path) -> None:
-    """Bar plot of RMSE for each ablation relative to full AwareKernel."""
+    """Bar plot of RMSE for each ablation relative to full Kernos."""
     datasets = sorted({r["dataset"] for r in rows})
     tiers = sorted({r["tier"] for r in rows})
     ablation_names = [
-        "AK-NoRefresh",
-        "AK-NoHysteresis",
-        "AK-NoCooldown",
-        "AK-NoResidAnchors",
-        "AK-NoOrthog",
-        "AK-NoDivPenalty",
-        "AK-StaticScaling",
+        "K-NoRefresh",
+        "K-NoHysteresis",
+        "K-NoCooldown",
+        "K-NoResidAnchors",
+        "K-NoOrthog",
+        "K-NoDivPenalty",
+        "K-NoFreeze",
     ]
 
     for dataset in datasets:
         for tier in tiers:
             subset = [r for r in rows if r["dataset"] == dataset and r["tier"] == tier]
-            full = next((r for r in subset if r["model"] == "AwareKernel"), None)
+            full = next((r for r in subset if r["model"] == "Kernos"), None)
             if full is None:
                 continue
             full_rmse = float(full["rmse"].split("±")[0].strip())
@@ -88,7 +88,7 @@ def plot_ablation_bars(rows: list[dict], output_dir: Path) -> None:
             for ab in ablation_names:
                 row = next((r for r in subset if r["model"] == ab), None)
                 if row:
-                    names.append(ab.replace("AK-", ""))
+                    names.append(ab.replace("K-", ""))
                     r = float(row["rmse"].split("±")[0].strip())
                     rel_rmses.append((r - full_rmse) / full_rmse * 100)
 
@@ -114,10 +114,10 @@ def plot_ablation_bars(rows: list[dict], output_dir: Path) -> None:
 
 
 def export_latex_table(rows: list[dict], output_dir: Path) -> None:
-    """Export a LaTeX table of main results ( AwareKernel + baselines only, no ablations)."""
+    """Export a LaTeX table of main results ( Kernos + baselines only, no ablations)."""
     datasets = sorted({r["dataset"] for r in rows})
     tiers = sorted({r["tier"] for r in rows})
-    models = ["AwareKernel", "Ridge", "Nystrom", "RFF"]
+    models = ["Kernos", "Ridge", "Nystrom", "RFF"]
 
     lines = [
         "\\begin{table}[ht]",
