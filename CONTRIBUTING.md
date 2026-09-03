@@ -1,6 +1,6 @@
-# Contributing to AwareKernel
+# Contributing to Kernos
 
-Thank you for your interest in contributing to AwareKernel! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Kernos! This document provides guidelines and instructions for contributing.
 
 ## Table of Contents
 
@@ -18,12 +18,12 @@ Thank you for your interest in contributing to AwareKernel! This document provid
 1. **Fork** the repository on GitHub.
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/<your-username>/aware-kernel.git
-   cd aware-kernel
+   git clone https://github.com/<your-username>/kernos.git
+   cd kernos
    ```
 3. **Add** the upstream remote:
    ```bash
-   git remote add upstream https://github.com/sachncs/aware-kernel.git
+   git remote add upstream https://github.com/sachncs/kernos.git
    ```
 4. **Install** development dependencies:
    ```bash
@@ -108,10 +108,10 @@ chore(deps): bump numpy to >=1.25
 4. **Update** documentation if needed.
 5. **Ensure** all checks pass:
    ```bash
-   ruff check .
-   black --check .
-   mypy --strict aware_kernel/
-   pytest tests/ -v -p no:asyncio
+    ruff check .
+    black --check .
+    mypy --strict kernos/
+    pytest tests/ -v -p no:asyncio
    ```
 6. **Submit** a pull request with a clear description.
 7. **Address** review feedback promptly.
@@ -176,14 +176,14 @@ pytest tests/ -v -p no:asyncio
 # Unit tests only
 pytest tests/unit/ -v -p no:asyncio
 
-# Numerical invariant tests
-pytest tests/numerical/ -v -p no:asyncio
+   # Numerical invariant tests
+   pytest tests/numeric/ -v -p no:asyncio
 
 # Integration tests
 pytest tests/integration/ -v -p no:asyncio
 
 # With coverage
-pytest tests/ --cov=aware_kernel --cov-report=term-missing
+pytest tests/ --cov=kernos --cov-report=term-missing
 
 # Specific test file
 pytest tests/unit/test_solver.py -v
@@ -205,7 +205,7 @@ black .
 black --check .
 
 # Type check
-mypy --strict aware_kernel/
+mypy --strict kernos/
 ```
 
 ## Documentation
