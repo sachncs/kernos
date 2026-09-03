@@ -1,8 +1,9 @@
 """Numerical utilities for kernos.
 
-Single-word module-level functions used throughout the codebase.  Drop-in
-replacement for the previous ``aware_kernel.utils.numerics`` and
-``aware_kernel.utils.linalg`` modules; aliases and dead helpers removed.
+Single-word module-level functions used throughout the codebase:
+clipping, soft spectral truncation, dataset-scale epsilon, eigenvalue
+retention, conditioning checks, Cholesky with jitter fallback, Frobenius
+drift, and preconditioned conjugate gradient.
 """
 
 from __future__ import annotations
