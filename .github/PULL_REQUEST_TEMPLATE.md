@@ -25,7 +25,7 @@ Describe the tests you ran or added to verify your changes:
 
 - [ ] My code follows the existing style of this project
 - [ ] I have run `ruff check .` and `black --check .` with no errors
-- [ ] I have run `mypy --strict aware_kernel/` with no errors
+- [ ] I have run `mypy --strict kernos/` with no errors
 - [ ] I have added or updated docstrings for new/changed functions
 - [ ] All new and existing tests pass
 - [ ] I have updated the CHANGELOG.md if applicable

@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature or enhancement for aware-kernel
+about: Suggest a new feature or enhancement for kernos
 title: "[FEATURE] "
 labels: enhancement
 assignees: ""
