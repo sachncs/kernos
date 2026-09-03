@@ -1,4 +1,4 @@
-# Real-World Evaluation Example for Aware-Kernel
+# Real-World Evaluation Example for Kernos
 
 This directory implements the full **Evaluation Protocol** (`EVALUATION_PROTOCOL.md`) on a diverse collection of real-world, HuggingFace, and synthetic datasets.
 
@@ -130,7 +130,7 @@ python -m scripts.analyze_results \
 ## Models Evaluated
 
 ### Main Method
-- **AwareKernel** – full refresh-aware hybrid kernel with continuous R optimization
+- **Kernos** – full refresh-aware hybrid kernel with continuous R optimization
 
 ### Baselines (Section 4)
 - **Ridge** – dense exact ridge in original feature space
@@ -138,13 +138,13 @@ python -m scripts.analyze_results \
 - **RFF** – Random Fourier Features ridge
 
 ### Ablations (Section 7)
-- `AK-NoRefresh` – static basis after first refresh
-- `AK-NoHysteresis` – `b_t = 1` permanently
-- `AK-NoCooldown` – cooldown disabled
-- `AK-NoResidAnchors` – coverage-only anchor sampling
-- `AK-NoOrthog` – skip local orthogonalization
-- `AK-NoDivPenalty` – `γ_div = 0`
-- `AK-StaticScaling` – freeze calibration scalars after first refresh
+- `K-NoRefresh` – static basis after first refresh
+- `K-NoHysteresis` – `b_t = 1` permanently
+- `K-NoCooldown` – cooldown disabled
+- `K-NoResidAnchors` – coverage-only anchor sampling
+- `K-NoOrthog` – skip local orthogonalization
+- `K-NoDivPenalty` – `γ_div = 0`
+- `K-NoFreeze` – freeze calibration scalars after first refresh
 
 ---
 
