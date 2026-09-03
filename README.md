@@ -1,16 +1,16 @@
 <p align="center">
-  <h1 align="center">aware-kernel</h1>
+  <h1 align="center">Kernos</h1>
   <p align="center">Refresh-aware hybrid continuous-discrete low-rank kernel learning for scalable, adaptive kernel regression.</p>
   <p align="center">
     <a href="#installation"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
-    <a href="https://github.com/sachncs/aware-kernel/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/aware-kernel/ci.yml?branch=master" alt="CI"></a>
-    <a href="https://pypi.org/project/aware-kernel/"><img src="https://img.shields.io/pypi/v/aware-kernel" alt="PyPI"></a>
-    <a href="https://github.com/sachncs/aware-kernel/stargazers"><img src="https://img.shields.io/github/stars/sachncs/aware-kernel" alt="Stars"></a>
+    <a href="https://github.com/sachncs/kernos/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/kernos/ci.yml?branch=master" alt="CI"></a>
+    <a href="https://pypi.org/project/kernos/"><img src="https://img.shields.io/pypi/v/kernos" alt="PyPI"></a>
+    <a href="https://github.com/sachncs/kernos/stargazers"><img src="https://img.shields.io/github/stars/sachncs/kernos" alt="Stars"></a>
   </p>
 </p>
 
-**aware-kernel** is a Python library that implements refresh-aware hybrid
+**Kernos** is a Python library that implements refresh-aware hybrid
 continuous-discrete low-rank kernel regression. It separates model parameters
 into continuous (updated every step) and discrete (refreshed adaptively)
 groups, enabling efficient training with dynamic basis adaptation.
@@ -36,14 +36,14 @@ groups, enabling efficient training with dynamic basis adaptation.
 ### From PyPI
 
 ```bash
-pip install aware-kernel
+pip install kernos
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/sachncs/aware-kernel.git
-cd aware-kernel
+git clone https://github.com/sachncs/kernos.git
+cd kernos
 pip install -e .
 ```
 
@@ -63,7 +63,7 @@ pip install -e ".[dev]"
 
 ```python
 import numpy as np
-from aware_kernel import AwareKernelEstimator
+from kernos import Kernos
 
 # Generate synthetic data
 rng = np.random.default_rng(42)
@@ -74,12 +74,14 @@ X_test = rng.standard_normal((50, 4))
 y_test = X_test[:, 0] + 0.5 * X_test[:, 1] ** 2 + 0.1 * rng.standard_normal(50)
 
 # Fit the model
-model = AwareKernelEstimator(
-    embedding_dim=4,
-    m_g=32,
-    m_l=8,
-    lambda_reg=1e-2,
-    max_steps=50,
+from kernos.core.plan import Buffer
+
+model = Kernos(
+    dim=4,
+    mbasis=32,
+    abasis=8,
+    ridge=1e-2,
+    steps=50,
     seed=42,
 )
 model.fit(X_train, y_train)
@@ -92,21 +94,23 @@ print(f"R^2 score: {model.score(X_test, y_test):.4f}")
 ### Memory Modes
 
 ```python
+from kernos.core.plan import Buffer
+
 # Cached (default) - O(nm) memory, simpler
-model = AwareKernelEstimator(memory_mode="cached")
+model = Kernos(mode=Buffer.FULL)
 
 # Streamed - O(m^2) memory, scales to larger datasets
-model = AwareKernelEstimator(memory_mode="streamed")
+model = Kernos(mode=Buffer.STREAM)
 ```
 
 ### Ablation Studies
 
 ```python
 # Disable specific components for ablation
-model = AwareKernelEstimator(
-    disable_refresh=True,            # No discrete refreshes
-    disable_orthogonalization=True,  # Skip orthogonalization
-    disable_diversity_penalty=True,  # Remove diversity regularization
+model = Kernos(
+    noref=True,   # No discrete refreshes
+    noorth=True,  # Skip orthogonalization
+    nodiv=True,   # Remove diversity regularization
 )
 ```
 
@@ -118,32 +122,32 @@ model = AwareKernelEstimator(
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `embedding_dim` | 64 | Dimension of continuous embedding space |
-| `m_g` | 512 | Global basis rank budget (landmarks) |
-| `m_l` | 128 | Local corrective rank budget (anchors) |
-| `lambda_reg` | 1e-3 | Ridge regularization parameter |
-| `memory_mode` | `"cached"` | `"cached"` or `"streamed"` |
-| `max_steps` | 1000 | Maximum training steps |
+| `dim` | 64 | Dimension of continuous embedding space |
+| `mbasis` | 512 | Global basis rank budget (landmarks) |
+| `abasis` | 128 | Local corrective rank budget (anchors) |
+| `ridge` | 1e-3 | Ridge regularization parameter |
+| `mode` | `Buffer.FULL` | `Buffer.FULL`, `Buffer.STREAM`, or `Buffer.ADAPTIVE` |
+| `steps` | 1000 | Maximum training steps |
 | `seed` | `None` | Random seed for reproducibility |
 
 ### Refresh Parameters
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `delta_hi` | 0.1 | Drift threshold to trigger refresh |
-| `t_cool` | 50 | Minimum steps between refreshes |
-| `t_warmup` | 10 | Minimum step before first refresh |
-| `gamma_cost` | 0.01 | Validation gain threshold scaled by refresh cost |
+| `drift_hi` | 0.1 | Drift threshold to trigger refresh |
+| `cool` | 50 | Minimum steps between refreshes |
+| `warm` | 10 | Minimum step before first refresh |
+| `gain` | 0.01 | Validation gain threshold scaled by refresh cost |
 
 ### Outer-Loop Optimizer
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `lr` | 1e-4 | Learning rate for gradient descent on R |
-| `lambda_r` | 0.0 | Frobenius regularizer weight |
-| `lambda_orth` | 0.0 | Orthogonality penalty weight |
-| `gamma_div` | 0.0 | Diversity penalty weight |
-| `fd_epsilon` | 1e-5 | Finite-difference perturbation magnitude |
+| `wr` | 0.0 | Frobenius regularizer weight |
+| `worth` | 0.0 | Orthogonality penalty weight |
+| `wdiv` | 0.0 | Diversity penalty weight |
+| `fdeps` | 1e-5 | Finite-difference perturbation magnitude |
 
 See [docs/getting-started.md](docs/getting-started.md) for detailed configuration options.
 
@@ -153,12 +157,12 @@ See [docs/getting-started.md](docs/getting-started.md) for detailed configuratio
 
 | Symbol | Type | Description |
 |--------|------|-------------|
-| `AwareKernelEstimator` | class | Sklearn-compatible estimator |
-| `AwareKernelEstimator.fit` | method | Fit the model on training data |
-| `AwareKernelEstimator.predict` | method | Predict target values |
-| `AwareKernelEstimator.score` | method | R² score on test data |
-| `AwareKernelEstimator(memory_mode=...)` | constructor arg | "cached" or "streamed" |
-| `AwareKernelEstimator(disable_refresh=...)` | constructor arg | Ablation toggle |
+| `Kernos` | class | Sklearn-compatible estimator |
+| `Kernos.fit` | method | Fit the model on training data |
+| `Kernos.predict` | method | Predict target values |
+| `Kernos.score` | method | R² score on test data |
+| `Kernos(mode=...)` | constructor arg | `Buffer.FULL`, `Buffer.STREAM`, or `Buffer.ADAPTIVE` |
+| `Kernos(noref=...)` | constructor arg | Ablation toggle |
 
 ---
 
@@ -168,13 +172,13 @@ See [docs/getting-started.md](docs/getting-started.md) for detailed configuratio
 
 ```python
 import numpy as np
-from aware_kernel import AwareKernelEstimator
+from kernos import Kernos
 
 rng = np.random.default_rng(42)
 X = rng.standard_normal((200, 4))
 y = X[:, 0] + 0.5 * X[:, 1] ** 2 + 0.1 * rng.standard_normal(200)
 
-model = AwareKernelEstimator(seed=42).fit(X, y)
+model = Kernos(seed=42).fit(X, y)
 print(model.score(X, y))
 ```
 
@@ -182,10 +186,10 @@ print(model.score(X, y))
 
 ```python
 from sklearn.model_selection import GridSearchCV
-from aware_kernel import AwareKernelEstimator
+from kernos import Kernos
 
-param_grid = {"m_g": [16, 32, 64], "m_l": [4, 8, 16], "lambda_reg": [1e-3, 1e-2]}
-search = GridSearchCV(AwareKernelEstimator(seed=42), param_grid, cv=5)
+param_grid = {"mbasis": [16, 32, 64], "abasis": [4, 8, 16], "ridge": [1e-3, 1e-2]}
+search = GridSearchCV(Kernos(seed=42), param_grid, cv=5)
 search.fit(X_train, y_train)
 print(search.best_params_)
 ```
@@ -218,61 +222,62 @@ See [docs/architecture.md](docs/architecture.md) for full design rationale and e
 ## Project Structure
 
 ```
-aware-kernel/
-├── aware_kernel/              # SDK package
-│   ├── __init__.py            # Public API exports
-│   ├── api.py                 # Sklearn-compatible estimator
+kernos/
+├── kernos/                    # SDK package
+│   ├── __init__.py            # Public API exports (Kernos)
 │   ├── _version.py            # PEP 440 version
-│   ├── aware/                 # Core types, config, state, exceptions
-│   │   ├── config.py          # TrainingConfig, NumericsConfig, etc.
-│   │   ├── state.py           # ContinuousState, DiscreteState, FullState
-│   │   ├── types.py           # Array, protocols (Embedder, Solver, etc.)
-│   │   └── exceptions.py      # ConditioningError, BudgetExceededError
-│   ├── embedding/             # Dense embedder and projection matrix
-│   │   ├── embedder.py        # DenseEmbedder (f_theta(x))
+│   ├── estimator.py           # Sklearn-compatible Kernos estimator
+│   ├── numeric.py             # Eigenvalue clip, soft truncation, chol, pcg, drift
+│   ├── linalg.py              # Linear-algebra helpers
+│   ├── sample.py              # k-means++, farthest-point sampling
+│   ├── core/                  # Types, errors, frozen Plan + state containers
+│   │   ├── types.py           # Array, check
+│   │   ├── error.py           # IllConditionedError
+│   │   ├── plan.py            # Plan dataclass + Buffer enum
+│   │   ├── state.py           # Continuous, Discrete, Bundle (frozen)
+│   │   └── rng.py             # Rng helpers
+│   ├── embed/                 # Dense embedders and projection matrix
+│   │   ├── linear.py          # Linear
+│   │   ├── identity.py        # Identity
+│   │   ├── kernel.py          # Kernel (RBF)
 │   │   └── projector.py       # Projector (normalize + R-projection)
-│   ├── global_basis/          # Nyström landmark selection and whitening
-│   │   ├── nystrom.py         # NystromGlobalBasis
-│   │   ├── whitening.py       # Spectral whitening map
-│   │   └── builder.py         # GlobalFeatureBuilder
-│   ├── local_corrective/      # Anchor sampling, sparse features
-│   │   ├── anchors.py         # Residual-aware anchor selection
-│   │   ├── sparse_features.py # k-NN sparse RBF features
-│   │   └── orthogonalizer.py  # Ridge-regularized nullspace projection
-│   ├── fusion/                # Calibration, gating, fused feature building
-│   │   ├── calibration.py     # Trace-based feature normalization
+│   ├── basis/                 # Nyström landmarks, whitening, random features
+│   │   ├── nystrom.py         # Nystrom
+│   │   ├── whitening.py       # Whitening (soft-truncated)
+│   │   ├── random.py          # Random (RFF)
+│   │   └── greedy.py          # Greedy landmark selector
+│   ├── correct/               # Anchor sampling, RBF, orthogonalization
+│   │   ├── sampler.py         # Residual-aware anchor sampler
+│   │   ├── rbf.py             # k-NN sparse RBF features
+│   │   └── orth/              # Ridge, Tikhonov projectors
+│   ├── fuse/                  # Calibration, gate, fused-feature builder
+│   │   ├── scaler.py          # Trace-based feature normalization
 │   │   ├── gate.py            # Logistic sigmoid gate
-│   │   └── builder.py         # FusedFeatureBuilder
-│   ├── solver/                # Ridge regression (Cholesky / PCG)
-│   │   ├── ridge.py           # DirectRidgeSolver, IterativeRidgeSolver
-│   │   ├── normal_eq.py       # Normal equation assembly
-│   │   └── preconditioner.py  # Diagonal Jacobi preconditioner
-│   ├── memory/                # Cached and streamed accumulators
-│   │   ├── base.py            # BaseMemoryAccumulator
-│   │   ├── cached.py          # CachedMemoryAccumulator
-│   │   └── streamed.py        # StreamedMemoryAccumulator
-│   ├── refresh/               # Drift, budget, controller, refresh pipeline
-│   │   ├── controller.py      # Five-condition decision logic
-│   │   ├── drift.py           # Relative Frobenius-norm drift
-│   │   ├── pipeline.py        # Seven-step discrete refresh pipeline
-│   │   └── budget.py          # BudgetAccountant
-│   ├── training/              # Training loop, objectives, callbacks
-│   │   ├── loop.py            # TrainingLoop
-│   │   ├── objectives.py      # Bilevel outer-loop objectives
-│   │   ├── optimizer.py       # OuterObjectiveOptimizer (SPSA)
-│   │   └── callbacks.py       # LoggingCallback, CheckpointCallback
-│   ├── inference/             # Mean and variance prediction
-│   │   └── predictor.py       # Predictor (Bayesian posterior)
-│   ├── evaluation/            # Datasets, baselines, metrics
-│   │   ├── baselines.py       # Ridge, Nyström, RFF baselines
-│   │   ├── datasets.py        # Synthetic regression generators
-│   │   ├── metrics.py         # RMSE, MAE, R^2, max abs error
-│   │   └── runner.py          # ExperimentRunner
-│   └── utils/                 # Linear algebra, numerics, sampling
-│       ├── linalg.py          # Safe Cholesky, PCG, Frobenius norm
-│       ├── numerics.py        # Eigenvalue clipping, soft truncation
-│       └── sampling.py        # k-means++, farthest point sampling
-├── tests/                     # Test suite (unit, numerical, integration)
+│   │   └── fuse.py            # Fuse
+│   ├── solver/                # Ridge regression (direct + iterative + Jacobi)
+│   │   ├── direct.py          # Direct (Cholesky + jitter)
+│   │   ├── iterative.py       # Iterative (PCG)
+│   │   ├── woodbury.py        # Woodbury
+│   │   ├── jacobi.py          # Jacobi preconditioner
+│   │   └── equation.py        # Equation assembly
+│   ├── cache/                 # Full / Stream / Adaptive accumulators
+│   ├── policy/                # Drift, budget, refresh controller, policy
+│   │   ├── budget.py          # Budget accountant
+│   │   ├── policy.py          # Refresh trigger policy
+│   │   ├── refresh.py         # Seven-step refresh pipeline
+│   │   └── drift/             # Frobenius, Spectral drift metrics
+│   ├── loop/                  # Training loop, callbacks, outer-step
+│   │   ├── loop.py            # Loop
+│   │   ├── callback.py        # Log, Snapshot, Profile
+│   │   ├── outerstep.py       # Outerstep (SPSA)
+│   │   └── loss.py            # Outer-loop loss terms
+│   ├── predict/               # Mean prediction
+│   └── bench/                 # Datasets, baselines, metrics, runner
+│       ├── baseline.py        # Ridge, Nystrom, Random baselines
+│       ├── dataset.py         # Synthetic regression generators
+│       ├── metric.py          # rmse, mae, r2, maxerr, allmetrics
+│       └── runner.py          # ExperimentRunner
+├── tests/                     # Test suite (unit, numeric, integration)
 ├── examples/                  # Real-world evaluation examples
 ├── docs/                      # Documentation
 └── pyproject.toml             # Build & tool config
@@ -285,9 +290,9 @@ aware-kernel/
 ```bash
 pip install -e ".[dev]"
 pytest tests/ -v
-ruff check aware_kernel/ tests/
-ruff format aware_kernel/ tests/
-mypy aware_kernel/
+ruff check kernos/ tests/
+ruff format kernos/ tests/
+mypy kernos/
 ```
 
 ### Code Style
@@ -318,7 +323,7 @@ chore: update ruff config
 ```bash
 pytest tests/ -v                # Full suite
 pytest tests/unit/ -v           # Unit tests only
-pytest --cov=aware_kernel       # With coverage
+pytest --cov=kernos            # With coverage
 ```
 
 ---
