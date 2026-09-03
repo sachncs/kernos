@@ -109,7 +109,7 @@ class Loop:
         if policy.decide(bundle, gain=1.0):
             U_val = Projector(bundle.continuous.R).forward(bundle.continuous.theta.forward(X_val))
             new_disc = self.refresh_pipe.run(bundle, U_val, y_val, self.rng)
-            new_disc = new_disc.replace(tlast=bundle.step)
+            new_disc = replace(new_disc, tlast=bundle.step)
             bundle = bundle.replace(discrete=new_disc)
             _, phi, _, _ = self.features(bundle, X_val)
             weights = self.solver.solve(phi, y_val)
