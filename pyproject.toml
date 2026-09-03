@@ -35,7 +35,17 @@ dev = [
     "pytest-cov>=4.0",
     "mypy>=1.5",
     "ruff>=0.1.0",
+    "datasets>=2.0",
+    "matplotlib>=3.5",
 ]
+examples = [
+    "datasets>=2.0",
+    "matplotlib>=3.5",
+]
+
+[project.scripts]
+kernos-eval = "examples.evaluation.cli:main"
+kernos-analyze = "examples.evaluation.analyze_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/sachncs/kernos"
@@ -46,7 +56,7 @@ Documentation = "https://github.com/sachncs/kernos/tree/master/docs"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["kernos*"]
+include = ["kernos*", "examples*"]
 
 [tool.mypy]
 python_version = "3.10"
