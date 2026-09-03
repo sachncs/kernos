@@ -25,12 +25,12 @@ def load_hf_wine_quality(*_args: object) -> tuple[np.ndarray, np.ndarray]:
 
 def load_hf_abalone(*_args: object) -> tuple[np.ndarray, np.ndarray]:
     """Abalone: n≈4177, d=7."""
-    return _load_hf_regression("reg_num_abalone", "ClassNumberOfRings")
+    return _load_hf_regression("reg_num_abalone", "Classnumberofrings")
 
 
 def load_hf_superconduct(*_args: object) -> tuple[np.ndarray, np.ndarray]:
     """Superconduct: n≈21263, d=80."""
-    return _load_hf_regression("reg_num_superconduct", "critical_temp")
+    return _load_hf_regression("reg_num_superconduct", "criticaltemp")
 
 
 def load_hf_house_sales(*_args: object) -> tuple[np.ndarray, np.ndarray]:
@@ -40,7 +40,7 @@ def load_hf_house_sales(*_args: object) -> tuple[np.ndarray, np.ndarray]:
 
 def load_hf_elevators(*_args: object) -> tuple[np.ndarray, np.ndarray]:
     """Elevators: n≈16599, d=18."""
-    return _load_hf_regression("reg_num_elevators", "Elev")
+    return _load_hf_regression("reg_num_elevators", "Goal")
 
 
 def load_hf_cpu_act(*_args: object) -> tuple[np.ndarray, np.ndarray]:
