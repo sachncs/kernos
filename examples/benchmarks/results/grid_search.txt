@@ -1,0 +1,1 @@
+grid_search: best_params={'abasis': 8, 'mbasis': 32, 'ridge': 0.01} best_score=0.714710
