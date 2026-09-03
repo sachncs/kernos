@@ -117,5 +117,7 @@ model.fit(X_train, y_train)
 
 - Read the [Architecture Guide](architecture.md) for module details
 - Check the [Design Document](design.md) for mathematical foundations
-- Review `examples/eval_real_world/` for real-world evaluation scripts
+- Review `examples/evaluation/` for the real-world evaluation suite
+  (see [Evaluation Protocol](evaluation-protocol.md) for the methodology)
+- Browse `examples/benchmarks/` for small, runnable API demos
 - See the [FAQ](faq.md) for common questions
