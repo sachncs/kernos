@@ -24,9 +24,9 @@ def load_synthetic_spatial(
     """
     del noise  # reserved for future use
     X = rng.uniform(0.0, 1.0, size=(n, 2))
-    signal = np.sin(2.0 * np.pi * X[:, 0]) * np.cos(
-        2.0 * np.pi * X[:, 1]
-    ) + 0.5 * np.sin(20.0 * np.pi * X[:, 0]) * np.sin(20.0 * np.pi * X[:, 1])
+    signal = np.sin(2.0 * np.pi * X[:, 0]) * np.cos(2.0 * np.pi * X[:, 1]) + 0.5 * np.sin(
+        20.0 * np.pi * X[:, 0]
+    ) * np.sin(20.0 * np.pi * X[:, 1])
     sig_var = float(np.var(signal))
     noise_std = np.sqrt(sig_var / snr) if snr > 0 else 0.0
     y = signal + noise_std * rng.standard_normal(n)

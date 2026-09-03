@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from examples.evaluation.models.tiers import BudgetTier
 from kernos import Kernos
 from kernos.bench.baseline import Nystrom as NystromBaseline
 from kernos.bench.baseline import Random as RandomFeatureBaseline
 from kernos.bench.baseline import Ridge as RidgeBaseline
-
-from examples.evaluation.models.tiers import BudgetTier
 
 
 def make_kernos(
@@ -33,7 +32,7 @@ def make_kernos(
         mbasis=tier.mbasis,
         abasis=tier.abasis,
         ridge=ridge,
-        mode=tier.mode,
+        mode=str(tier.mode.value),
         steps=tier.steps,
         eval_every=max(1, tier.steps // 20),
         seed=seed,

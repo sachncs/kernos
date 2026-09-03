@@ -18,7 +18,7 @@ from examples.evaluation.reporting.latex import export_latex_table
 from examples.evaluation.reporting.plots import plot_ablation_bars, plot_pareto_fronts
 
 
-def _parse_csv(path: Path) -> list[dict]:
+def _parse_csv(path: Path) -> list[dict[str, str]]:
     """Parse ``path`` as a CSV into a list of row dicts."""
     with open(path, newline="") as f:
         return list(csv.DictReader(f))

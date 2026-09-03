@@ -28,7 +28,7 @@ def main() -> None:
 
     lines = ["| Mode | RMSE |", "|---|---|"]
     for label, mode in (("FULL", Buffer.FULL), ("STREAM", Buffer.STREAM)):
-        model = Kernos(seed=42, mode=mode, mbasis=64, abasis=16, steps=50)
+        model = Kernos(seed=42, mode=str(mode.value), mbasis=64, abasis=16, steps=50)
         model.fit(X_train, y_train)
         r = rmse(y_test, model.predict(X_test))
         print(f"  {label:8s} RMSE={r:.4f}")

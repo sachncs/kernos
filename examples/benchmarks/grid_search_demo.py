@@ -32,10 +32,7 @@ def main() -> None:
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     out = RESULTS_DIR / "grid_search.txt"
-    out.write_text(
-        f"grid_search: best_params={search.best_params_} "
-        f"best_score={search.best_score_:.6f}\n"
-    )
+    out.write_text(f"grid_search: best_params={search.best_params_} best_score={search.best_score_:.6f}\n")
     print(f"Wrote {out}")
 
 

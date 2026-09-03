@@ -8,6 +8,7 @@ Run with::
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Protocol
 
 import numpy as np
 
@@ -16,6 +17,13 @@ from kernos.bench.baseline import Nystrom, Random, Ridge
 from kernos.bench.metric import rmse
 
 RESULTS_DIR = Path(__file__).parent / "results"
+
+
+class _FitPredict(Protocol):
+    """Minimal protocol for estimators used in this benchmark."""
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> _FitPredict: ...
+    def predict(self, X: np.ndarray) -> np.ndarray: ...
 
 
 def _make_data(rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -32,7 +40,7 @@ def main() -> None:
     rng = np.random.default_rng(7)
     X_train, y_train, X_test, y_test = _make_data(rng)
 
-    models = {
+    models: dict[str, _FitPredict] = {
         "Kernos": Kernos(seed=42, mbasis=64, abasis=16, steps=50),
         "Ridge": Ridge(ridge=1e-2),
         "Nystrom": Nystrom(mbasis=64, ridge=1e-2, seed=42),
@@ -42,7 +50,7 @@ def main() -> None:
     lines = ["| Model | RMSE |", "|---|---|"]
     for name, model in models.items():
         model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
+        y_pred: np.ndarray = model.predict(X_test)
         r = rmse(y_test, y_pred)
         print(f"  {name:8s} RMSE={r:.4f}")
         lines.append(f"| {name} | {r:.4f} |")

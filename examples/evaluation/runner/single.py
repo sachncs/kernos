@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import time
 import tracemalloc
+from typing import Any
 
 import numpy as np
 
+from examples.evaluation.reporting.result_record import SingleRunResult
+from kernos import Kernos
 from kernos.bench.metric import allmetrics
 
-from examples.evaluation.reporting.result_record import SingleRunResult
 
-
-def run_single_kernos(model, X_train, y_train, X_test, y_test) -> SingleRunResult:
+def run_single_kernos(
+    model: Kernos,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_test: np.ndarray,
+    y_test: np.ndarray,
+) -> SingleRunResult:
     """Fit Kernos on ``(X_train, y_train)``, predict on ``X_test``.
 
     Tracks wall-clock fit/predict time and peak memory via
@@ -48,7 +55,13 @@ def run_single_kernos(model, X_train, y_train, X_test, y_test) -> SingleRunResul
     )
 
 
-def run_single_baseline(model, X_train, y_train, X_test, y_test) -> SingleRunResult:
+def run_single_baseline(
+    model: Any,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_test: np.ndarray,
+    y_test: np.ndarray,
+) -> SingleRunResult:
     """Fit a baseline estimator and return metrics + timing.
 
     Refresh count is ``0`` and condition proxy is ``NaN`` for baselines.

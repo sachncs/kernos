@@ -13,9 +13,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import numpy as np
+
 from examples.evaluation.datasets.registry import DATASET_REGISTRY
 
 __all__ = ["DATASET_REGISTRY", "DatasetLoader"]
 
-DatasetLoader = Callable[..., tuple["np.ndarray", "np.ndarray"]]
+DatasetLoader = Callable[..., tuple[np.ndarray, np.ndarray]]
 """A dataset loader returns ``(X, y)`` after accepting optional ``rng``."""

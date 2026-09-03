@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-def export_latex_table(rows: list[dict], output_dir: Path) -> None:
+def export_latex_table(rows: list[dict[str, str]], output_dir: Path) -> None:
     """Write ``results_table.tex`` containing Kernos + baselines only.
 
     Iterates over datasets × tiers × {Kernos, Ridge, Nystrom, RFF}.
@@ -31,9 +31,7 @@ def export_latex_table(rows: list[dict], output_dir: Path) -> None:
                     (
                         r
                         for r in rows
-                        if r["dataset"] == dataset
-                        and r["tier"] == tier
-                        and r["model"] == model
+                        if r["dataset"] == dataset and r["tier"] == tier and r["model"] == model
                     ),
                     None,
                 )

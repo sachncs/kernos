@@ -11,8 +11,6 @@ These verify that:
 
 from __future__ import annotations
 
-import argparse
-
 import pytest
 
 from examples.evaluation.datasets.registry import DATASET_REGISTRY
@@ -150,7 +148,7 @@ class TestBudgetTierDataclass:
 
     def test_tier_dimensions_increase_monotonically(self) -> None:
         """``mbasis`` and ``abasis`` increase Small < Medium < Large."""
-        from examples.evaluation.models.tiers import SMALL, MEDIUM, LARGE
+        from examples.evaluation.models.tiers import LARGE, MEDIUM, SMALL
 
         assert SMALL.mbasis < MEDIUM.mbasis < LARGE.mbasis
         assert SMALL.abasis < MEDIUM.abasis < LARGE.abasis

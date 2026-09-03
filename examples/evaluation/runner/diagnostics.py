@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 
+from kernos import Kernos
 
-def compute_condition_proxy(estimator, X: np.ndarray, ridge: float) -> float:
+FitPredictModel = Any
+"""Type alias for any estimator with ``fit`` and ``predict`` (used in lambdas)."""
+
+
+def compute_condition_proxy(estimator: Kernos, X: np.ndarray, ridge: float) -> float:
     """Compute ``cond(Phi^T Phi + ridge I)`` as a numeric diagnostic.
 
     Returns ``inf`` if the estimator is not fitted or lacks an
@@ -22,7 +28,6 @@ def compute_condition_proxy(estimator, X: np.ndarray, ridge: float) -> float:
     from kernos.loop.loop import Loop
 
     loop = Loop(estimator.plan_)
-    embeddings = embed.forward(X)
     _, phi, _, _ = loop.features(bundle, X)
     gram = phi.T @ phi + ridge * np.eye(phi.shape[1])
     try:
@@ -33,7 +38,7 @@ def compute_condition_proxy(estimator, X: np.ndarray, ridge: float) -> float:
 
 
 def tune_lambda_reg(
-    factory: Callable[[float], object],
+    factory: Callable[[float], FitPredictModel],
     X_train: np.ndarray,
     y_train: np.ndarray,
     X_val: np.ndarray,

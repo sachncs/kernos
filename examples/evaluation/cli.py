@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 from examples.evaluation.datasets.registry import DATASET_REGISTRY
-from examples.evaluation.models.tiers import LARGE, MEDIUM, SMALL, TIER_MAP
+from examples.evaluation.models.tiers import TIER_MAP
 from examples.evaluation.reporting.csv_writer import write_results_csv
 from examples.evaluation.reporting.markdown import results_to_markdown, stability_to_markdown
 from examples.evaluation.reporting.result_record import ExperimentResult
@@ -59,10 +59,7 @@ def main() -> None:
     args = parser.parse_args()
 
     datasets = list(DATASET_REGISTRY.keys()) if args.datasets == ["all"] else args.datasets
-    tiers = [
-        TIER_MAP[t]
-        for t in (["Small", "Medium", "Large"] if args.tiers == ["all"] else args.tiers)
-    ]
+    tiers = [TIER_MAP[t] for t in (["Small", "Medium", "Large"] if args.tiers == ["all"] else args.tiers)]
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 

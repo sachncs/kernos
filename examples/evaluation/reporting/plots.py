@@ -18,7 +18,7 @@ ABLATION_NAMES: list[str] = [
 ]
 
 
-def plot_pareto_fronts(rows: list[dict], output_dir: Path) -> None:
+def plot_pareto_fronts(rows: list[dict[str, str]], output_dir: Path) -> None:
     """Generate Pareto plots: RMSE vs Train Time per (dataset, tier)."""
     datasets = sorted({r["dataset"] for r in rows})
     tiers = sorted({r["tier"] for r in rows})
@@ -53,7 +53,7 @@ def plot_pareto_fronts(rows: list[dict], output_dir: Path) -> None:
         print(f"Saved {out_path}")
 
 
-def plot_ablation_bars(rows: list[dict], output_dir: Path) -> None:
+def plot_ablation_bars(rows: list[dict[str, str]], output_dir: Path) -> None:
     """Bar plot of relative RMSE change per ablation vs full Kernos."""
     datasets = sorted({r["dataset"] for r in rows})
     tiers = sorted({r["tier"] for r in rows})

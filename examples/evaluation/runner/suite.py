@@ -7,6 +7,7 @@ Runs Kernos + baselines + (optionally) ablations for a single
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 
@@ -17,6 +18,9 @@ from examples.evaluation.reporting.result_record import ExperimentResult
 from examples.evaluation.runner.diagnostics import tune_lambda_reg
 from examples.evaluation.runner.single import run_single_baseline, run_single_kernos
 from examples.evaluation.runner.splits import preprocess_and_split
+
+BaselineFactory = Callable[[float, int], Any]
+"""A baseline factory takes ``(λ, seed)`` and returns a fresh estimator."""
 
 
 def run_experiment_suite(
@@ -39,8 +43,12 @@ def run_experiment_suite(
     for seed in seeds:
         rng = np.random.default_rng(seed)
         X_tr, X_val, X_te, y_tr, y_val, y_te = preprocess_and_split(X, y, rng)
+
+        def _kernos_factory(lam: float, _seed: int = seed) -> Any:
+            return make_kernos(tier, lam, _seed)
+
         best_lam = tune_lambda_reg(
-            lambda lam, _seed=seed: make_kernos(tier, lam, _seed),
+            _kernos_factory,
             X_tr,
             y_tr,
             X_val,
@@ -51,7 +59,7 @@ def run_experiment_suite(
         exp.runs.append(run_single_kernos(model, X_tr, y_tr, X_te, y_te))
     results.append(exp)
 
-    baseline_factories: dict[str, Callable[[float, int], object]] = {
+    baseline_factories: dict[str, BaselineFactory] = {
         "Ridge": lambda lam, s: make_ridge(lam),
         "Nystrom": lambda lam, s: make_nystrom(tier, lam, s),
         "RFF": lambda lam, s: make_rff(tier, lam, s),
@@ -61,8 +69,12 @@ def run_experiment_suite(
         for seed in seeds:
             rng = np.random.default_rng(seed)
             X_tr, X_val, X_te, y_tr, y_val, y_te = preprocess_and_split(X, y, rng)
+
+            def _baseline_factory(lam: float, _seed: int = seed, _f: BaselineFactory = factory) -> Any:
+                return _f(lam, _seed)
+
             best_lam = tune_lambda_reg(
-                lambda lam, _seed=seed, _factory=factory: _factory(lam, _seed),
+                _baseline_factory,
                 X_tr,
                 y_tr,
                 X_val,
@@ -79,10 +91,12 @@ def run_experiment_suite(
             for seed in seeds:
                 rng = np.random.default_rng(seed)
                 X_tr, X_val, X_te, y_tr, y_val, y_te = preprocess_and_split(X, y, rng)
+
+                def _ablation_factory(lam: float, _seed: int = seed, _cfg: dict[str, bool] = abcfg) -> Any:
+                    return make_kernos(tier, lam, _seed, ablation=_cfg)
+
                 best_lam = tune_lambda_reg(
-                    lambda lam, _seed=seed, _abcfg=abcfg: make_kernos(
-                        tier, lam, _seed, ablation=_abcfg
-                    ),
+                    _ablation_factory,
                     X_tr,
                     y_tr,
                     X_val,

@@ -6,7 +6,8 @@ All loaders return ``(X, y)`` as ``np.ndarray`` of dtype ``float64``.
 from __future__ import annotations
 
 import numpy as np
-from sklearn.datasets import fetch_california_housing, load_diabetes
+from sklearn.datasets import fetch_california_housing
+from sklearn.datasets import load_diabetes as _sklearn_load_diabetes
 
 
 def load_california_housing(*_args: object) -> tuple[np.ndarray, np.ndarray]:
@@ -17,5 +18,5 @@ def load_california_housing(*_args: object) -> tuple[np.ndarray, np.ndarray]:
 
 def load_diabetes(*_args: object) -> tuple[np.ndarray, np.ndarray]:
     """Diabetes: n=442, d=10."""
-    data = load_diabetes()
+    data = _sklearn_load_diabetes()
     return data.data.astype(np.float64), data.target.astype(np.float64)

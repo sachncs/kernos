@@ -38,11 +38,16 @@ def main() -> None:
     y_test = X_test[:, 0] + 0.5 * X_test[:, 1] ** 2 + 0.1 * rng.standard_normal(200)
 
     rows: list[tuple[str, float, float]] = []
+
+    def _fit(ablation: dict[str, bool]) -> Kernos:
+        model = Kernos(seed=42, mbasis=64, abasis=16, steps=50, noref=False, nohyst=False, nocool=False, noresid=False, noorth=False, nodiv=False, nofreeze=False)
+        for k, v in ablation.items():
+            setattr(model, k, v)
+        return model.fit(X_train, y_train)
+
     for label, flag in ABLATION_FLAGS:
-        kwargs: dict = dict(seed=42, mbasis=64, abasis=16, steps=50)
-        if flag:
-            kwargs[flag] = True
-        model = Kernos(**kwargs).fit(X_train, y_train)
+        ablation = {flag: True} if flag else {}
+        model = _fit(ablation)
         r = rmse(y_test, model.predict(X_test))
         print(f"  {label:10s} RMSE={r:.4f}")
         rows.append((label, r, 0.0))
