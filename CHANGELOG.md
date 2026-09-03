@@ -33,6 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rebranded package from aware-kernel to kernos
+- Renamed public estimator `AwareKernelEstimator` to `Kernos`
+- Renamed hyperparameters to match the new `Plan` schema (`dim`, `mbasis`, `abasis`, `ridge`, `mode`, `steps`, …)
+- Replaced `AblationConfig` dataclass with `Plan` boolean ablation flags (`noref`, `nohyst`, `nocool`, `noresid`, `noorth`, `nodiv`, `nofreeze`)
+- Renamed baseline classes (`NystromRidgeBaseline` → `Nystrom`, `RandomFeatureBaseline` → `Random`) under `kernos.bench.baseline`
+- Renamed metrics helper `compute_all_metrics` → `allmetrics` under `kernos.bench.metric`
+- Renamed `MemoryMode` enum to `Buffer` under `kernos.core.plan`
+- Replaced `TrainingLoop` with `Loop` under `kernos.loop.loop`
+- Updated all documentation, GitHub metadata, and examples to use the new API
 - Converted semi-private naming conventions to public API (removed `_` prefix from attributes with property accessors)
 - Replaced `print` statements with `logging` module in training callbacks
 - Updated tests to reflect public attribute naming
