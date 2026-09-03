@@ -162,7 +162,7 @@ class TestBudgetTierDataclass:
 
     def test_tier_dimensions_increase_monotonically(self) -> None:
         """``mbasis`` and ``abasis`` increase Small < Medium < Large."""
-        from examples.evaluation.models.tiers import SMALL, MEDIUM, LARGE
+        from examples.evaluation.models.tiers import LARGE, MEDIUM, SMALL
 
         assert SMALL.mbasis < MEDIUM.mbasis < LARGE.mbasis
         assert SMALL.abasis < MEDIUM.abasis < LARGE.abasis
@@ -174,7 +174,6 @@ class TestSummaryAggregator:
     def _make_csv(self, tmp: Path) -> Path:
         """Write a minimal results.csv with 2 datasets × 11 models."""
         path = tmp / "results.csv"
-        rows = []
         models = [
             "Kernos",
             "Ridge",
