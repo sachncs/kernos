@@ -1,0 +1,1 @@
+quickstart: r2=0.396280

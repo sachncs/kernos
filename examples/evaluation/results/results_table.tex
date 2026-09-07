@@ -1,0 +1,56 @@
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{llllll}
+\toprule
+Dataset & Tier & Model & RMSE & Train (s) & Peak Mem (MB) \\
+\midrule
+Abalone & Small & Kernos & 0.750915 ± 0.030441 & 1.1301 ± 0.0775 & 81.35 ± 0.00 \\
+Abalone & Small & Ridge & 0.729736 ± 0.046014 & 0.0001 ± 0.0000 & 0.01 ± 0.00 \\
+Abalone & Small & Nystrom & 0.704686 ± 0.048339 & 0.0262 ± 0.0024 & 42.95 ± 0.00 \\
+Abalone & Small & RFF & 0.697635 ± 0.052308 & 0.0201 ± 0.0001 & 34.29 ± 0.00 \\
+\midrule
+CPUActivity & Small & Kernos & 0.451408 ± 0.082915 & 1.2961 ± 0.0912 & 194.31 ± 0.00 \\
+CPUActivity & Small & Ridge & 0.528448 ± 0.037352 & 0.0001 ± 0.0000 & 0.02 ± 0.00 \\
+CPUActivity & Small & Nystrom & 0.930204 ± 0.058745 & 0.0631 ± 0.0039 & 240.93 ± 0.00 \\
+CPUActivity & Small & RFF & 0.955895 ± 0.051183 & 0.0387 ± 0.0015 & 67.28 ± 0.00 \\
+\midrule
+CaliforniaHousing & Small & Kernos & 0.557285 ± 0.016749 & 1.6213 ± 0.0285 & 1181.74 ± 0.00 \\
+CaliforniaHousing & Small & Ridge & 0.627522 ± 0.012711 & 0.0001 ± 0.0000 & 0.01 ± 0.00 \\
+CaliforniaHousing & Small & Nystrom & 0.662900 ± 0.024107 & 0.0858 ± 0.0023 & 239.98 ± 0.00 \\
+CaliforniaHousing & Small & RFF & 0.566843 ± 0.010761 & 0.0963 ± 0.0057 & 169.34 ± 0.00 \\
+\midrule
+Elevators & Small & Kernos & 0.520559 ± 0.043469 & 1.4735 ± 0.1255 & 770.15 ± 0.00 \\
+Elevators & Small & Ridge & 0.429794 ± 0.018176 & 0.0001 ± 0.0000 & 0.01 ± 0.00 \\
+Elevators & Small & Nystrom & 0.983364 ± 0.019842 & 0.1056 ± 0.0087 & 374.58 ± 0.00 \\
+Elevators & Small & RFF & 1.009147 ± 0.013567 & 0.0799 ± 0.0056 & 136.23 ± 0.00 \\
+\midrule
+HouseSales & Small & Kernos & 0.486363 ± 0.021348 & 1.9841 ± 0.0367 & 1295.26 ± 0.00 \\
+HouseSales & Small & Ridge & 0.495934 ± 0.003561 & 0.0003 ± 0.0000 & 0.01 ± 0.00 \\
+HouseSales & Small & Nystrom & 0.914290 ± 0.009143 & 0.1382 ± 0.0042 & 458.15 ± 0.00 \\
+HouseSales & Small & RFF & 0.935873 ± 0.020446 & 0.0885 ± 0.0017 & 177.36 ± 0.00 \\
+\midrule
+Kin8nm & Small & Kernos & 0.603371 ± 0.026944 & 1.2303 ± 0.1050 & 193.74 ± 0.00 \\
+Kin8nm & Small & Ridge & 0.763951 ± 0.015889 & 0.0001 ± 0.0000 & 0.01 ± 0.00 \\
+Kin8nm & Small & Nystrom & 0.873830 ± 0.016292 & 0.0364 ± 0.0003 & 95.33 ± 0.00 \\
+Kin8nm & Small & RFF & 0.921865 ± 0.036285 & 0.0362 ± 0.0001 & 67.23 ± 0.00 \\
+\midrule
+Superconduct & Small & Kernos & 0.483458 ± 0.003384 & 1.6191 ± 0.1126 & 1261.51 ± 0.00 \\
+Superconduct & Small & Ridge & 0.517951 ± 0.001747 & 0.0009 ± 0.0002 & 0.24 ± 0.00 \\
+Superconduct & Small & Nystrom & 0.885672 ± 0.025165 & 0.4111 ± 0.0045 & 2311.29 ± 0.00 \\
+Superconduct & Small & RFF & 0.816121 ± 0.002370 & 0.0863 ± 0.0002 & 174.74 ± 0.00 \\
+\midrule
+WineQuality & Small & Kernos & 0.832325 ± 0.007291 & 1.1802 ± 0.0306 & 126.58 ± 0.00 \\
+WineQuality & Small & Ridge & 0.828031 ± 0.004652 & 0.0001 ± 0.0000 & 0.01 ± 0.00 \\
+WineQuality & Small & Nystrom & 0.905678 ± 0.018017 & 0.0353 ± 0.0004 & 102.27 ± 0.00 \\
+WineQuality & Small & RFF & 0.922210 ± 0.030827 & 0.0297 ± 0.0004 & 53.33 ± 0.00 \\
+\midrule
+YearPredictionMSD & Small & Kernos & 0.340978 ± 0.025466 & 1.0590 ± 0.0282 & 193.91 ± 0.00 \\
+YearPredictionMSD & Small & Ridge & 0.541802 ± 0.039155 & 0.0001 ± 0.0000 & 0.01 ± 0.00 \\
+YearPredictionMSD & Small & Nystrom & 0.786743 ± 0.075784 & 0.0428 ± 0.0009 & 140.13 ± 0.00 \\
+YearPredictionMSD & Small & RFF & 0.818163 ± 0.030004 & 0.0359 ± 0.0003 & 67.25 ± 0.00 \\
+\midrule
+\bottomrule
+\end{tabular}
+\caption{Evaluation results across datasets and budget tiers.}
+\end{table}
