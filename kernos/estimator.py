@@ -31,6 +31,10 @@ class Kernos(BaseEstimator, RegressorMixin):
         abasis: int = 128,
         ridge: float = 1e-3,
         mode: str = "full",
+        embedder: str = "linear",
+        basis: str = "nystrom",
+        solver: str = "direct",
+        drift: str = "frobenius",
         steps: int = 1000,
         eval_every: int = 10,
         batch: int = 32,
@@ -64,6 +68,10 @@ class Kernos(BaseEstimator, RegressorMixin):
         self.abasis = abasis
         self.ridge = ridge
         self.mode = mode
+        self.embedder = embedder
+        self.basis = basis
+        self.solver = solver
+        self.drift = drift
         self.steps = steps
         self.eval_every = eval_every
         self.batch = batch
@@ -101,6 +109,10 @@ class Kernos(BaseEstimator, RegressorMixin):
             abasis=self.abasis,
             ridge=self.ridge,
             mode=buffer,
+            embedder=self.embedder,
+            basis=self.basis,
+            solver=self.solver,
+            drift=self.drift,
             steps=self.steps,
             eval_every=self.eval_every,
             batch=self.batch,

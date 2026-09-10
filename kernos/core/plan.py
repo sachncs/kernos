@@ -6,13 +6,13 @@ instance with selected fields overridden.
 
 Field groupings (documented only — they are not enforced structurally):
 
-* Embedding: ``dim``, ``seed``.
-* Basis capacity: ``mbasis``, ``abasis``, ``lk``, ``ltau``.
-* Solver: ``ridge``, ``stab_*`` (numerical stability thresholds).
+* Embedding: ``dim``, ``seed``, ``embedder``.
+* Basis capacity: ``mbasis``, ``abasis``, ``lk``, ``ltau``, ``basis``.
+* Solver: ``ridge``, ``solver``, ``stab_*`` (numerical stability thresholds).
 * Training: ``mode``, ``steps``, ``eval_every``, ``batch``, ``lr``,
   ``wr``, ``worth``, ``wdiv``, ``fdeps``.
-* Refresh policy: ``drift_hi``, ``cool``, ``warm``, ``gain``, ``budget``,
-  ``rcost``, ``amix``.
+* Refresh policy: ``drift_hi``, ``drift``, ``cool``, ``warm``, ``gain``,
+  ``budget``, ``rcost``, ``amix``.
 * Ablation: ``noref``, ``nohyst``, ``nocool``, ``noresid``, ``noorth``,
   ``nodiv``, ``nofreeze``, ``log_every``.
 * Validation: ``val_frac``.
@@ -35,6 +35,12 @@ class Buffer(Enum):
     ADAPTIVE = "adaptive"
 
 
+VALID_EMBEDDERS = ("linear", "identity")
+VALID_BASIS = ("nystrom", "greedy")
+VALID_SOLVERS = ("direct", "iterative", "woodbury")
+VALID_DRIFT = ("frobenius", "spectral")
+
+
 @dataclass(frozen=True)
 class Plan:
     """Master configuration for ``Kernos``."""
@@ -44,6 +50,10 @@ class Plan:
     abasis: int = 128
     ridge: float = 1e-3
     mode: Buffer = Buffer.FULL
+    embedder: str = "linear"
+    basis: str = "nystrom"
+    solver: str = "direct"
+    drift: str = "frobenius"
 
     steps: int = 1000
     eval_every: int = 10
@@ -99,6 +109,10 @@ class Plan:
         check(self.lk <= self.abasis, f"lk ({self.lk}) must be <= abasis ({self.abasis})")
         check(self.lk >= 1, f"lk must be >= 1, got {self.lk}")
         check(0 < self.val_frac < 1, f"val_frac must be in (0, 1), got {self.val_frac}")
+        check(self.embedder in VALID_EMBEDDERS, f"embedder must be one of {VALID_EMBEDDERS}, got {self.embedder!r}")
+        check(self.basis in VALID_BASIS, f"basis must be one of {VALID_BASIS}, got {self.basis!r}")
+        check(self.solver in VALID_SOLVERS, f"solver must be one of {VALID_SOLVERS}, got {self.solver!r}")
+        check(self.drift in VALID_DRIFT, f"drift must be one of {VALID_DRIFT}, got {self.drift!r}")
 
     def replace(self, **kwargs: Any) -> "Plan":
         """Return a new ``Plan`` with the given fields overridden."""
