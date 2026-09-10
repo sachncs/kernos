@@ -137,6 +137,12 @@ class Kernos(BaseEstimator, RegressorMixin):
         """
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
+        if X.ndim != 2:
+            raise ValueError(f"X must be 2-D (samples, features); got shape {X.shape}")
+        if y.ndim != 1:
+            raise ValueError(f"y must be 1-D (samples,); got shape {y.shape}")
+        if X.shape[0] != y.shape[0]:
+            raise ValueError(f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}")
         n = X.shape[0]
         n_val = max(1, int(self.val_frac * n))
         n_train = n - n_val
@@ -170,6 +176,12 @@ class Kernos(BaseEstimator, RegressorMixin):
         if check_fitted is None:
             raise RuntimeError("Kernos is not fitted yet; call fit() first.")
         X = np.asarray(X, dtype=np.float64)
+        if X.ndim != 2:
+            raise ValueError(f"X must be 2-D (samples, features); got shape {X.shape}")
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"feature count mismatch: X has {X.shape[1]} feature(s) but Kernos was fitted on {self.n_features_in_}"
+            )
         bundle: Bundle = self.bundle_
         loop = self.loop_ if self.loop_ is not None else Loop(self.plan_)
         _, phi, _, _ = loop.features(bundle, X)
@@ -185,8 +197,18 @@ class Kernos(BaseEstimator, RegressorMixin):
         """Run exactly one continuous update on ``(X, y)``."""
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
+        if X.ndim != 2:
+            raise ValueError(f"X must be 2-D (samples, features); got shape {X.shape}")
+        if y.ndim != 1:
+            raise ValueError(f"y must be 1-D (samples,); got shape {y.shape}")
+        if X.shape[0] != y.shape[0]:
+            raise ValueError(f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}")
         if not hasattr(self, "loop_"):
             return self.fit(X, y)
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"feature count mismatch: X has {X.shape[1]} feature(s) but Kernos was fitted on {self.n_features_in_}"
+            )
         self.bundle_ = self.loop_.step(self.bundle_, X, y)
         return self
 
