@@ -107,7 +107,9 @@ class Refresh:
             return Adaptive(mfeat=mfeat, threshold=2 * mfeat)
         return Full()
 
-    def _anchors(self, U: np.ndarray, basis: Nystrom | Greedy, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    def _anchors(
+        self, U: np.ndarray, basis: Nystrom | Greedy, y: np.ndarray, rng: np.random.Generator
+    ) -> np.ndarray:
         """Select anchors via the residual-aware Sampler."""
         if self.plan.noresid:
             indices = kmeanspp(U, self.plan.abasis, rng)
