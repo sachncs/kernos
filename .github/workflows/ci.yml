@@ -27,8 +27,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff
 
-      - name: Run ruff
+      - name: Run ruff check
         run: ruff check kernos/ tests/
+
+      - name: Run ruff format check
+        run: ruff format --check kernos/ tests/
 
   typecheck:
     name: Type Check
@@ -78,3 +81,7 @@ jobs:
 
       - name: Run integration tests
         run: pytest tests/integration -v --no-cov
+
+      - name: Run coverage gate
+        run: |
+          pytest tests/ --cov=kernos --cov-report=term-missing --cov-fail-under=80 -q

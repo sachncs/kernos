@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import numpy as np
-
 from kernos.core.plan import Plan
 from kernos.core.state import Bundle
 

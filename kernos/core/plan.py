@@ -20,7 +20,7 @@ Field groupings (documented only — they are not enforced structurally):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
 
@@ -98,7 +98,10 @@ class Plan:
     stab_jitter_retry: int = 5
 
     def __post_init__(self) -> None:
-        check(self.abasis <= 0.25 * self.mbasis, f"abasis ({self.abasis}) must be <= 0.25 * mbasis ({0.25 * self.mbasis})")
+        check(
+            self.abasis <= 0.25 * self.mbasis,
+            f"abasis ({self.abasis}) must be <= 0.25 * mbasis ({0.25 * self.mbasis})",
+        )
         check(self.ridge >= self.stab_lmin, f"ridge ({self.ridge}) must be >= stab_lmin ({self.stab_lmin})")
         check(self.drift_hi > 0, f"drift_hi must be positive, got {self.drift_hi}")
         check(self.cool >= 0, f"cool must be non-negative, got {self.cool}")
@@ -109,11 +112,14 @@ class Plan:
         check(self.lk <= self.abasis, f"lk ({self.lk}) must be <= abasis ({self.abasis})")
         check(self.lk >= 1, f"lk must be >= 1, got {self.lk}")
         check(0 < self.val_frac < 1, f"val_frac must be in (0, 1), got {self.val_frac}")
-        check(self.embedder in VALID_EMBEDDERS, f"embedder must be one of {VALID_EMBEDDERS}, got {self.embedder!r}")
+        check(
+            self.embedder in VALID_EMBEDDERS,
+            f"embedder must be one of {VALID_EMBEDDERS}, got {self.embedder!r}",
+        )
         check(self.basis in VALID_BASIS, f"basis must be one of {VALID_BASIS}, got {self.basis!r}")
         check(self.solver in VALID_SOLVERS, f"solver must be one of {VALID_SOLVERS}, got {self.solver!r}")
         check(self.drift in VALID_DRIFT, f"drift must be one of {VALID_DRIFT}, got {self.drift!r}")
 
-    def replace(self, **kwargs: Any) -> "Plan":
+    def replace(self, **kwargs: Any) -> Plan:
         """Return a new ``Plan`` with the given fields overridden."""
         return replace(self, **kwargs)

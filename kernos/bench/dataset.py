@@ -18,13 +18,14 @@ def linear(rng: np.random.Generator, samples: int, features: int, noise: float =
 def poly(rng: np.random.Generator, samples: int, degree: int, noise: float = 0.1) -> tuple[Array, Array]:
     """Polynomial regression on a single feature."""
     x = rng.standard_normal(samples)
-    powers = np.arange(degree + 1)
     coeffs = rng.standard_normal(degree + 1)
     y = np.polyval(coeffs[::-1], x) + noise * rng.standard_normal(samples)
     return x.reshape(-1, 1), y
 
 
-def highdim(rng: np.random.Generator, samples: int, features: int, informative: int, noise: float = 0.1) -> tuple[Array, Array]:
+def highdim(
+    rng: np.random.Generator, samples: int, features: int, informative: int, noise: float = 0.1
+) -> tuple[Array, Array]:
     """High-dim regression with only ``informative`` columns carrying signal."""
     X = rng.standard_normal((samples, features))
     selected = rng.choice(features, size=informative, replace=False)
@@ -40,7 +41,9 @@ def hetero(rng: np.random.Generator, samples: int, base: float = 0.1) -> tuple[A
     return X, y
 
 
-def split(X: Array, y: Array, size: float, rng: np.random.Generator | None = None) -> tuple[Array, Array, Array, Array]:
+def split(
+    X: Array, y: Array, size: float, rng: np.random.Generator | None = None
+) -> tuple[Array, Array, Array, Array]:
     """Random train/test split.
 
     Args:

@@ -39,7 +39,9 @@ class Rbf:
         dist = np.sqrt(np.sum(diff * diff, axis=-1) + self.eps)
         nn_indices = np.argpartition(dist, neighbors - 1, axis=1)[:, :neighbors]
         sparse = np.zeros((samples, anchors), dtype=np.float64)
-        np.put_along_axis(sparse, nn_indices, np.exp(-self.ltau * np.take_along_axis(dist, nn_indices, axis=1) ** 2), axis=1)
+        np.put_along_axis(
+            sparse, nn_indices, np.exp(-self.ltau * np.take_along_axis(dist, nn_indices, axis=1) ** 2), axis=1
+        )
         return sparse
 
     def norm(self, sparse: Array) -> Array:

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+
+import numpy as np
 
 from kernos.core.state import Bundle
 
@@ -32,7 +33,11 @@ class Log(Callback):
 
     def onstep(self, step: int, bundle: Bundle) -> None:
         if self.log_every > 0 and step % self.log_every == 0:
-            logger.info("step=%d w_norm=%.3e", step, float(np.linalg.norm(bundle.weights)) if bundle.weights is not None else 0.0)
+            logger.info(
+                "step=%d w_norm=%.3e",
+                step,
+                float(np.linalg.norm(bundle.weights)) if bundle.weights is not None else 0.0,
+            )
 
 
 class Snapshot(Callback):

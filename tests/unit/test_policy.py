@@ -43,7 +43,9 @@ class TestBudget:
         assert budget.remaining == pytest.approx(7.0)
 
     def test_overflow_raises(self, budget: Budget) -> None:
-        with pytest.raises(Exception):
+        from kernos.core.error import BudgetExceeded
+
+        with pytest.raises(BudgetExceeded):
             budget.spend(15.0)
 
     def test_remaining_zero_initially(self, budget: Budget) -> None:

@@ -44,7 +44,17 @@ def div(phig: Array, phil: Array) -> float:
     return 1.0 - inner / (ng * nl)
 
 
-def outer(y: Array, phi: Array, weights: Array, R: Array, phig: Array, phil: Array, wr: float = 0.0, worth: float = 0.0, wdiv: float = 0.0) -> float:
+def outer(
+    y: Array,
+    phi: Array,
+    weights: Array,
+    R: Array,
+    phig: Array,
+    phil: Array,
+    wr: float = 0.0,
+    worth: float = 0.0,
+    wdiv: float = 0.0,
+) -> float:
     """Aggregate outer objective ``ridge + (wr + worth) * ||R||_F^2 + wdiv * div``.
 
     ``wr`` is the Frobenius regularizer weight and ``worth`` is the

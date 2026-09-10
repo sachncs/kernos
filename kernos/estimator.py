@@ -15,9 +15,8 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from kernos.basis.nystrom import Nystrom
 from kernos.core.plan import Buffer, Plan
 from kernos.core.state import Bundle
-from kernos.embed.projector import Projector
-from kernos.loop.loop import Loop
 from kernos.loop.callback import Callback, Log
+from kernos.loop.loop import Loop
 from kernos.predict.predict import Predict
 
 
@@ -142,7 +141,7 @@ class Kernos(BaseEstimator, RegressorMixin):
             nofreeze=self.nofreeze,
         )
 
-    def fit(self, X: np.ndarray, y: np.ndarray, callbacks: list[Callback] | None = None) -> "Kernos":
+    def fit(self, X: np.ndarray, y: np.ndarray, callbacks: list[Callback] | None = None) -> Kernos:
         """Fit the model to ``(X, y)``.
 
         Splits ``(X, y)`` internally into training and validation
@@ -156,7 +155,9 @@ class Kernos(BaseEstimator, RegressorMixin):
         if y.ndim != 1:
             raise ValueError(f"y must be 1-D (samples,); got shape {y.shape}")
         if X.shape[0] != y.shape[0]:
-            raise ValueError(f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}")
+            raise ValueError(
+                f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}"
+            )
         min_required = int(np.ceil(self.mbasis / max(1.0 - self.val_frac, 1e-9))) + 2
         if X.shape[0] < min_required:
             raise ValueError(
@@ -180,7 +181,7 @@ class Kernos(BaseEstimator, RegressorMixin):
 
         self.loop_ = Loop(self.plan_, callbacks=cb)
         bundle = self.loop_.initialize(X_train, y_train)
-        for step in range(1, self.plan_.steps + 1):
+        for _step in range(1, self.plan_.steps + 1):
             bundle = self.loop_.step(bundle, X_train, y_train, X_val=X_val, y_val=y_val)
 
         self.bundle_ = bundle
@@ -222,7 +223,7 @@ class Kernos(BaseEstimator, RegressorMixin):
             return 0.0
         return out
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray) -> "Kernos":
+    def partial_fit(self, X: np.ndarray, y: np.ndarray) -> Kernos:
         """Run exactly one continuous update on ``(X, y)``."""
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
@@ -231,7 +232,9 @@ class Kernos(BaseEstimator, RegressorMixin):
         if y.ndim != 1:
             raise ValueError(f"y must be 1-D (samples,); got shape {y.shape}")
         if X.shape[0] != y.shape[0]:
-            raise ValueError(f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}")
+            raise ValueError(
+                f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}"
+            )
         if not hasattr(self, "loop_"):
             return self.fit(X, y)
         if X.shape[1] != self.n_features_in_:
@@ -254,9 +257,20 @@ class Kernos(BaseEstimator, RegressorMixin):
 
     def get_config(self) -> dict:
         """Return a serializable snapshot of all hyperparameters."""
-        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and k != "loop_" and k != "bundle_" and k != "predictor_" and k != "basis_" and k != "X_train_" and k != "plan_" and k != "n_features_in_"}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if not k.startswith("_")
+            and k != "loop_"
+            and k != "bundle_"
+            and k != "predictor_"
+            and k != "basis_"
+            and k != "X_train_"
+            and k != "plan_"
+            and k != "n_features_in_"
+        }
 
-    def set_params(self, **params: Any) -> "Kernos":
+    def set_params(self, **params: Any) -> Kernos:
         """Set hyperparameters and re-run ``Plan`` validation immediately.
 
         The default ``BaseEstimator.set_params`` only mutates

@@ -44,7 +44,9 @@ class Loop:
         self.rbf = Rbf(plan.ltau, plan.lk)
         self.solver = self._build_solver(plan)
         self.fuse = Fuse()
-        self.refresh_pipe = Refresh(plan, self.whitening, self.scaler, self.sampler, self.rbf, self.fuse, self.solver)
+        self.refresh_pipe = Refresh(
+            plan, self.whitening, self.scaler, self.sampler, self.rbf, self.fuse, self.solver
+        )
         self.outerstep = Outerstep(plan)
         self.orth = Ridge(plan.stab_eta)
         self.drift_metric = Spectral() if plan.drift == "spectral" else Frobenius()
@@ -58,7 +60,9 @@ class Loop:
             return Iterative(plan.ridge)
         if plan.solver == "woodbury":
             return Woodbury(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max)
-        return Direct(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa)
+        return Direct(
+            plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa
+        )
 
     def initialize(self, X: np.ndarray, y: np.ndarray) -> Bundle:
         """Initialize state from data and solve for the first ridge coefficients."""
@@ -90,7 +94,9 @@ class Loop:
             return np.eye(input_dim)
         return np.eye(self.plan.dim)
 
-    def features(self, bundle: Bundle, X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def features(
+        self, bundle: Bundle, X: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Build features and return ``(U, phi, phig, phil)``.
 
         Public so ``Outerstep.step`` doesn't reach into private API.
@@ -105,10 +111,20 @@ class Loop:
         U = proj.forward(embed.forward(X))
         basis = self._build_basis_from(bundle.discrete)
         phig = basis.forward(U)
-        phil = self.rbf.forward(U, bundle.discrete.anchors) if bundle.discrete.anchors is not None else np.zeros((X.shape[0], 0))
+        phil = (
+            self.rbf.forward(U, bundle.discrete.anchors)
+            if bundle.discrete.anchors is not None
+            else np.zeros((X.shape[0], 0))
+        )
         if not self.plan.noorth and phil.size > 0:
             phil = self.orth.forward(phig, phil)
-        phi = self.fuse.forward(phig, phil, cglobal=bundle.discrete.cglobal, clocal=bundle.discrete.clocal, gateval=bundle.discrete.gateval)
+        phi = self.fuse.forward(
+            phig,
+            phil,
+            cglobal=bundle.discrete.cglobal,
+            clocal=bundle.discrete.clocal,
+            gateval=bundle.discrete.gateval,
+        )
         return U, phi, phig, phil
 
     def _build_basis_from(self, discrete):
@@ -119,7 +135,14 @@ class Loop:
             return Greedy(discrete.landmarks, discrete.basis_wz)
         return Nystrom(discrete.landmarks, discrete.whitening)
 
-    def step(self, bundle: Bundle, X: np.ndarray, y: np.ndarray, X_val: np.ndarray | None = None, y_val: np.ndarray | None = None) -> Bundle:
+    def step(
+        self,
+        bundle: Bundle,
+        X: np.ndarray,
+        y: np.ndarray,
+        X_val: np.ndarray | None = None,
+        y_val: np.ndarray | None = None,
+    ) -> Bundle:
         """Single training step: bump step, continuous update, possibly refresh."""
         new_step = bundle.step + 1
         bundle = bundle.replace(step=new_step)

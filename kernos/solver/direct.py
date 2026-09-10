@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from kernos.core.error import IllConditionedError
 from kernos.core.types import Array
 from kernos.numeric import chol
 
@@ -12,7 +11,9 @@ from kernos.numeric import chol
 class Direct:
     """Direct ridge solver using Cholesky with jitter fallback."""
 
-    def __init__(self, ridge: float, jitter: float, retry: int, factor: float, cap: float, kappa: float) -> None:
+    def __init__(
+        self, ridge: float, jitter: float, retry: int, factor: float, cap: float, kappa: float
+    ) -> None:
         self.ridge = ridge
         self.jitter = jitter
         self.retry = retry

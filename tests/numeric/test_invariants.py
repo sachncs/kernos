@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
 from kernos.correct.orth import Ridge
-from kernos.correct.rbf import Rbf
 
 
 class TestPSD:

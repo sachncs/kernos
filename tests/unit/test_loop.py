@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kernos.bench.dataset import linear
 from kernos.loop.callback import Log, Profile, Snapshot
 from kernos.loop.loop import Loop
 from kernos.loop.loss import div, orth, outer, ridge

@@ -29,7 +29,15 @@ class Sampler:
         """Residual weights from per-sample residuals ``(samples,)``."""
         return np.maximum(residuals, 0.0) ** 2
 
-    def pick(self, U: Array, distances: Array, residuals: Array, abasis: int, rng: np.random.Generator, noresid: bool = False) -> Array:
+    def pick(
+        self,
+        U: Array,
+        distances: Array,
+        residuals: Array,
+        abasis: int,
+        rng: np.random.Generator,
+        noresid: bool = False,
+    ) -> Array:
         """Select ``abasis`` anchors from ``U``.
 
         Args:

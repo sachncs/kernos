@@ -9,7 +9,7 @@ from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
 from kernos.bench.dataset import linear
 from kernos.cache import Adaptive, Full, Stream
-from kernos.core.plan import Buffer, Plan
+from kernos.core.plan import Plan
 from kernos.core.rng import Rng
 from kernos.core.state import Bundle, Continuous, Discrete
 from kernos.correct.orth import Ridge, Tikhonov
@@ -27,7 +27,6 @@ from kernos.loop.loop import Loop
 from kernos.loop.outerstep import Outerstep
 from kernos.policy.budget import Budget
 from kernos.policy.drift import Frobenius, Spectral
-from kernos.policy.policy import Policy
 from kernos.policy.refresh import Refresh
 from kernos.predict.predict import Predict
 from kernos.solver.direct import Direct
@@ -99,7 +98,9 @@ def rbf(plan: Plan) -> Rbf:
 
 @pytest.fixture
 def solver(plan: Plan) -> Direct:
-    return Direct(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa)
+    return Direct(
+        plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa
+    )
 
 
 @pytest.fixture
@@ -186,7 +187,9 @@ def projector() -> Projector:
 
 @pytest.fixture
 def direct_solver(plan: Plan) -> Direct:
-    return Direct(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa)
+    return Direct(
+        plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa
+    )
 
 
 @pytest.fixture

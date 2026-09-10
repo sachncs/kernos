@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from kernos.core.types import Array, check
 from kernos.basis.whitening import Whitening
+from kernos.core.types import Array, check
 from kernos.sample import kmeanspp
 
 
@@ -23,7 +23,9 @@ class Nystrom:
         self.gamma = gamma
 
     @classmethod
-    def fromdata(cls, U: Array, mbasis: int, whitening: Whitening, rng: np.random.Generator, gamma: float = 1.0) -> "Nystrom":
+    def fromdata(
+        cls, U: Array, mbasis: int, whitening: Whitening, rng: np.random.Generator, gamma: float = 1.0
+    ) -> Nystrom:
         """Build a ``Nystrom`` basis from data via k-means++ landmarks."""
         indices = kmeanspp(U, mbasis, rng)
         Z = U[indices].copy()
@@ -32,7 +34,7 @@ class Nystrom:
         return cls(Z, Mg, gamma)
 
     @classmethod
-    def fromlandmarks(cls, Z: Array, whitening: Whitening, gamma: float = 1.0) -> "Nystrom":
+    def fromlandmarks(cls, Z: Array, whitening: Whitening, gamma: float = 1.0) -> Nystrom:
         """Build a ``Nystrom`` basis from a user-supplied landmark set."""
         W = whitening.kernel(Z, gamma)
         _, _, Mg, _ = whitening.build(W)
