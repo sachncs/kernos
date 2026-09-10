@@ -103,50 +103,43 @@ A refresh triggers only when: drift > threshold AND cooldown elapsed AND warmup 
 
 ### Immutability of State
 
-`ContinuousState`, `DiscreteState`, and `FullState` are frozen dataclasses with `copy_with` methods. This makes refresh boundaries explicit and avoids surprising mutations during the discrete pipeline.
+`Continuous`, `Discrete`, and `Bundle` are frozen dataclasses with `replace` methods (via `dataclasses.replace`). This makes refresh boundaries explicit and avoids surprising mutations during the discrete pipeline.
 
-### Protocols over Inheritance
+### Duck-Typed Interfaces
 
-Core interfaces (`Embedder`, `RidgeSolver`, `MemoryAccumulator`, `RefreshPolicy`) are defined as `typing.Protocol`. This keeps modules decoupled and makes swapping implementations straightforward.
+Core abstractions (`Embed`, `Basis`, `Refresh`, `Solver`, `Drift`, `Cache`) are consumed via the same `forward` / `run` / `solve` method names rather than `typing.Protocol`. This keeps modules decoupled without the ceremony of explicit protocol declarations.
 
 ### Numerical Hardening
 
-All numerical thresholds are centralized in `NumericsConfig`:
+All numerical thresholds are centralized as `stab_*` fields on `Plan`:
 
 | Parameter | Purpose |
 |-----------|---------|
-| `tau_eig` | Eigenvalue floor for soft truncation |
-| `alpha_epsilon` | Dataset-scale epsilon for whitening stability |
-| `epsilon_c` | Minimum calibration scale to prevent feature collapse |
-| `lambda_min` | Floor on ridge regularization for SPD guarantees |
-| `eta_o` | Ridge regularizer for orthogonalization matrix invertibility |
-| `kappa_threshold` | Maximum acceptable condition number |
+| `stab_tau` | Eigenvalue floor for soft truncation |
+| `stab_alpha` | Dataset-scale epsilon for whitening stability |
+| `stab_jitter` | Initial jitter for Cholesky-with-fallback |
+| `stab_jitter_retry` | Maximum Cholesky fallback attempts |
+| `stab_eta` | Ridge regularizer for orthogonalization matrix invertibility |
+| `stab_kappa` | Maximum acceptable condition number |
 
 ### Cached vs. Streamed Memory
 
 - **Cached**: Stores the full `Phi` matrix. Simpler, enables direct normal-equation construction. O(nm) memory.
-- **Streamed**: Accumulates `S` and `b` online. Reduces memory to O(m^2). Parity tests confirm both modes produce identical coefficients.
+- **Streamed**: Accumulates `S` and `b` online. Reduces memory to O(m^2). Parity tests confirm both modes produce identical coefficients (see `tests/unit/test_cache.py::TestAdaptive::test_parity_full`).
 
 ## Extension Points
 
 ### Custom Embedder
 
-Implement the `Embedder` protocol and pass it into a custom `TrainingLoop` initializer:
-
-```python
-class MyEmbedder:
-    def embed(self, X: np.ndarray) -> np.ndarray:
-        # Your embedding logic
-        ...
-```
+Subclass or compose any object that exposes `forward(X) -> ndarray` and a `params()` pair; pass it into `Loop.initialize` or override `Kernos.build_plan` to swap the `Linear` embedder.
 
 ### Alternative Refresh Policy
 
-Implement the `RefreshPolicy` protocol and replace the default `should_refresh` logic in `TrainingLoop.maybe_refresh`.
+Replace `Policy.decide` with a custom decision rule and pass it into `Loop.__init__` in place of the default `Policy(plan, drift_value)`.
 
-### GPU Solver
+### Alternative Solver
 
-Replace `DirectRidgeSolver` with a CuPy-backed solver that implements the `RidgeSolver` protocol. The `Loop` and `Kernos` will work unchanged.
+`kernos.solver` ships `Direct` (Cholesky), `Iterative` (PCG), `Woodbury`, and `Jacobi`. All expose the same `solve(phi, y)` signature so the `Loop` can be parameterised.
 
 ## Testing Strategy
 
