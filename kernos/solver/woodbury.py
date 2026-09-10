@@ -29,9 +29,13 @@ class Woodbury:
         """Solve via Woodbury identity."""
         samples, features = phi.shape
         if samples >= features:
-            raise IllConditionedError(f"Woodbury expects samples < features, got samples={samples}, features={features}")
+            raise IllConditionedError(
+                f"Woodbury expects samples < features, got samples={samples}, features={features}"
+            )
         lam = self.ridge
         A = np.eye(samples) + (1.0 / lam) * (phi @ phi.T)
         factor = chol(A, jitter=self.jitter, retry=self.retry, factor=self.factor, cap=self.cap)
-        rhs = (1.0 / lam) * phi.T @ y - (1.0 / lam**2) * phi.T @ np.linalg.solve(factor, np.linalg.solve(factor.T, phi @ phi.T @ y))
+        rhs = (1.0 / lam) * phi.T @ y - (1.0 / lam**2) * phi.T @ np.linalg.solve(
+            factor, np.linalg.solve(factor.T, phi @ phi.T @ y)
+        )
         return rhs

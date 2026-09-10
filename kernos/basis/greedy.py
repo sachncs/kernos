@@ -21,7 +21,7 @@ class Greedy:
         self.gamma = gamma
 
     @classmethod
-    def fromdata(cls, U: Array, mbasis: int, rng: np.random.Generator, gamma: float = 1.0) -> "Greedy":
+    def fromdata(cls, U: Array, mbasis: int, rng: np.random.Generator, gamma: float = 1.0) -> Greedy:
         """Select ``mbasis`` columns by leverage-score sampling."""
         samples = U.shape[0]
         indices = rng.choice(samples, size=min(mbasis, samples), replace=False)

@@ -18,7 +18,9 @@ class Outerstep:
     def __init__(self, plan: Plan) -> None:
         self.plan = plan
 
-    def evaluate(self, R: np.ndarray, bundle: Bundle, X_batch: np.ndarray, y_batch: np.ndarray, features) -> float:
+    def evaluate(
+        self, R: np.ndarray, bundle: Bundle, X_batch: np.ndarray, y_batch: np.ndarray, features
+    ) -> float:
         """Evaluate the outer objective for a candidate ``R``.
 
         ``features`` is a callable ``features(R) -> (phi, phig, phil)``
@@ -35,9 +37,13 @@ class Outerstep:
             self.plan.stab_kappa,
         )
         weights = solver.solve(phi, y_batch)
-        return outer(y_batch, phi, weights, R, phig, phil, wr=self.plan.wr, worth=self.plan.worth, wdiv=self.plan.wdiv)
+        return outer(
+            y_batch, phi, weights, R, phig, phil, wr=self.plan.wr, worth=self.plan.worth, wdiv=self.plan.wdiv
+        )
 
-    def step(self, bundle: Bundle, X_batch: np.ndarray, y_batch: np.ndarray, features, rng: np.random.Generator) -> Bundle:
+    def step(
+        self, bundle: Bundle, X_batch: np.ndarray, y_batch: np.ndarray, features, rng: np.random.Generator
+    ) -> Bundle:
         """One gradient-descent step on ``R``."""
         R = bundle.continuous.R
         if R is None:
@@ -49,7 +55,14 @@ class Outerstep:
             direction = rng.choice([-1.0, 1.0], size=R.shape) / max(np.linalg.norm(R, "fro"), 1.0)
             plus = R + self.plan.fdeps * direction
             minus = R - self.plan.fdeps * direction
-            gradient += (self.evaluate(plus, bundle, X_batch, y_batch, features) - self.evaluate(minus, bundle, X_batch, y_batch, features)) / (2.0 * self.plan.fdeps) * direction
+            gradient += (
+                (
+                    self.evaluate(plus, bundle, X_batch, y_batch, features)
+                    - self.evaluate(minus, bundle, X_batch, y_batch, features)
+                )
+                / (2.0 * self.plan.fdeps)
+                * direction
+            )
         gradient /= sweeps
         new_R = R - self.plan.lr * gradient
         new_cont = replace(bundle.continuous, R=new_R)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from kernos.core.rng import Rng
 
@@ -28,7 +27,6 @@ class TestSpawn:
 
     def test_spawn_independence(self, rng: np.random.Generator) -> None:
         children = Rng.spawn(rng, 3)
-        a = children[0].integers(0, 1000)
-        b = children[1].integers(0, 1000)
-        # Independence is probabilistic but for tiny draws should match
+        _ = children[0].integers(0, 1000)
+        _ = children[1].integers(0, 1000)
         assert children[0] is not children[1]

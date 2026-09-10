@@ -17,7 +17,6 @@ from kernos.core.plan import Buffer, Plan
 from kernos.core.state import Bundle, Discrete
 from kernos.correct.rbf import Rbf
 from kernos.correct.sampler import Sampler
-from kernos.embed.projector import Projector
 from kernos.fuse.fuse import Fuse
 from kernos.fuse.scaler import Scaler
 from kernos.sample import kmeanspp
@@ -27,7 +26,16 @@ from kernos.solver.direct import Direct
 class Refresh:
     """Discrete refresh pipeline."""
 
-    def __init__(self, plan: Plan, whitening: Whitening, scaler: Scaler, sampler: Sampler, rbf: Rbf, fuse: Fuse, solver: Direct) -> None:
+    def __init__(
+        self,
+        plan: Plan,
+        whitening: Whitening,
+        scaler: Scaler,
+        sampler: Sampler,
+        rbf: Rbf,
+        fuse: Fuse,
+        solver: Direct,
+    ) -> None:
         self.plan = plan
         self.whitening = whitening
         self.scaler = scaler
@@ -75,7 +83,9 @@ class Refresh:
             gatelogit=self.fuse.gatelogit,
         )
 
-    def _build_basis(self, U: np.ndarray, rng: np.random.Generator) -> tuple[Nystrom | Greedy, np.ndarray | None]:
+    def _build_basis(
+        self, U: np.ndarray, rng: np.random.Generator
+    ) -> tuple[Nystrom | Greedy, np.ndarray | None]:
         """Select a basis factory based on ``plan.basis``.
 
         Returns ``(basis, basis_wz)``.  ``basis_wz`` is populated only

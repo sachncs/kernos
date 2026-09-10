@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kernos.core.types import Array, asfloat64, check
+from kernos.core.types import asfloat64, check
 
 
 class TestCheck:

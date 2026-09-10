@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from kernos.embed.identity import Identity
 from kernos.embed.kernel import Kernel

@@ -113,7 +113,9 @@ def drift(R: Array, Rref: Array) -> float:
     return delta / baseline
 
 
-def pcg(S: Array, b: Array, max_iter: int = 1000, tol: float = 1e-6, precon: Array | None = None) -> tuple[Array, int]:
+def pcg(
+    S: Array, b: Array, max_iter: int = 1000, tol: float = 1e-6, precon: Array | None = None
+) -> tuple[Array, int]:
     """Preconditioned CG solve of ``S @ x = b``.
 
     Args:

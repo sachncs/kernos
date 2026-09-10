@@ -12,19 +12,25 @@ from kernos import Kernos
 class TestKernos:
     def test_fit_returns_self(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        model = Kernos(dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0)
+        model = Kernos(
+            dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0
+        )
         result = model.fit(X, y)
         assert result is model
 
     def test_predict_shape(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        model = Kernos(dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0).fit(X, y)
+        model = Kernos(
+            dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0
+        ).fit(X, y)
         out = model.predict(X)
         assert out.shape == (X.shape[0],)
 
     def test_score_is_r2(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        model = Kernos(dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0).fit(X, y)
+        model = Kernos(
+            dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0
+        ).fit(X, y)
         score = model.score(X, y)
         assert np.isfinite(score)
 
@@ -52,7 +58,9 @@ class TestKernos:
         import pickle
 
         X, y = synthetic
-        model = Kernos(dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0).fit(X, y)
+        model = Kernos(
+            dim=4, mbasis=32, abasis=4, lk=4, steps=3, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0
+        ).fit(X, y)
         score_before = model.score(X, y)
         blob = pickle.dumps(model)
         restored = pickle.loads(blob)
@@ -63,13 +71,17 @@ class TestKernos:
 
     def test_partial_fit(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        model = Kernos(dim=4, mbasis=32, abasis=4, lk=4, steps=1, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0).fit(X, y)
+        model = Kernos(
+            dim=4, mbasis=32, abasis=4, lk=4, steps=1, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0
+        ).fit(X, y)
         result = model.partial_fit(X, y)
         assert result is model
 
     def test_n_features_in_recorded(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
-        model = Kernos(dim=4, mbasis=32, abasis=4, lk=4, steps=1, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0).fit(X, y)
+        model = Kernos(
+            dim=4, mbasis=32, abasis=4, lk=4, steps=1, batch=16, seed=42, drift_hi=10.0, cool=0, warm=0
+        ).fit(X, y)
         assert model.n_features_in_ == X.shape[1]
 
     def test_predict_before_fit_raises(self) -> None:

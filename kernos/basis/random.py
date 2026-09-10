@@ -23,7 +23,7 @@ class Random:
         self.gamma = gamma
 
     @classmethod
-    def fromdata(cls, input_dim: int, mfeat: int, rng: np.random.Generator, gamma: float = 1.0) -> "Random":
+    def fromdata(cls, input_dim: int, mfeat: int, rng: np.random.Generator, gamma: float = 1.0) -> Random:
         """Sample RFF frequencies and phases.
 
         ``omega ~ N(0, 2*gamma*I)``, ``phases ~ Uniform(0, 2*pi)``.

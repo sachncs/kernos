@@ -80,6 +80,6 @@ class Bundle:
     step: int = 0
     weights: Array | None = None
 
-    def replace(self, **kwargs: Any) -> "Bundle":
+    def replace(self, **kwargs: Any) -> Bundle:
         """Return a new ``Bundle`` with the given fields overridden."""
         return replace(self, **kwargs)
