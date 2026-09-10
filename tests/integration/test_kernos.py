@@ -84,3 +84,26 @@ class TestKernos:
         model = Kernos(dim=4, mbasis=16, abasis=4, lk=2, steps=1)
         with pytest.raises(ValueError, match="n_samples"):
             model.fit(X, y)
+
+    def test_default_hyperparameters(self) -> None:
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((1200, 3))
+        y = X[:, 0] + 0.1 * rng.standard_normal(1200)
+        model = Kernos()
+        model.fit(X, y)
+        params = model.get_params()
+        assert params["dim"] == 64
+        assert params["mbasis"] == 512
+        assert params["ridge"] == pytest.approx(1e-3)
+        pred = model.predict(X[:5])
+        assert pred.shape == (5,)
+        assert np.isfinite(model.score(X[:200], y[:200]))
+
+    def test_default_modes(self) -> None:
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((1200, 3))
+        y = X[:, 0] + 0.1 * rng.standard_normal(1200)
+        for mode in ("full", "stream", "adaptive"):
+            model = Kernos(dim=8, mbasis=16, abasis=2, lk=2, steps=1, mode=mode)
+            model.fit(X, y)
+            assert np.isfinite(model.score(X[:200], y[:200]))
