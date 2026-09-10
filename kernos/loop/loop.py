@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import numpy as np
 
+from kernos.basis.greedy import Greedy
 from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
 from kernos.core.plan import Plan
@@ -14,6 +15,7 @@ from kernos.core.state import Bundle, Continuous
 from kernos.correct.orth import Ridge
 from kernos.correct.rbf import Rbf
 from kernos.correct.sampler import Sampler
+from kernos.embed.identity import Identity
 from kernos.embed.linear import Linear
 from kernos.embed.projector import Projector
 from kernos.fuse.fuse import Fuse
@@ -21,10 +23,12 @@ from kernos.fuse.scaler import Scaler
 from kernos.loop.callback import Callback
 from kernos.loop.outerstep import Outerstep
 from kernos.policy.budget import Budget
-from kernos.policy.drift import Frobenius
+from kernos.policy.drift import Frobenius, Spectral
 from kernos.policy.policy import Policy
 from kernos.policy.refresh import Refresh
 from kernos.solver.direct import Direct
+from kernos.solver.iterative import Iterative
+from kernos.solver.woodbury import Woodbury
 
 
 class Loop:
@@ -38,20 +42,29 @@ class Loop:
         self.scaler = Scaler(plan.stab_eps)
         self.sampler = Sampler(plan.amix)
         self.rbf = Rbf(plan.ltau, plan.lk)
-        self.solver = Direct(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa)
+        self.solver = self._build_solver(plan)
         self.fuse = Fuse()
         self.refresh_pipe = Refresh(plan, self.whitening, self.scaler, self.sampler, self.rbf, self.fuse, self.solver)
         self.outerstep = Outerstep(plan)
         self.orth = Ridge(plan.stab_eta)
-        self.drift_metric = Frobenius()
+        self.drift_metric = Spectral() if plan.drift == "spectral" else Frobenius()
         self.budget = Budget(plan.budget)
         self.Rref: np.ndarray | None = None
+
+    @staticmethod
+    def _build_solver(plan: Plan):
+        """Pick the ridge solver configured on ``plan.solver``."""
+        if plan.solver == "iterative":
+            return Iterative(plan.ridge)
+        if plan.solver == "woodbury":
+            return Woodbury(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max)
+        return Direct(plan.ridge, plan.stab_jitter, plan.stab_jitter_retry, 10.0, plan.stab_jitter_max, plan.stab_kappa)
 
     def initialize(self, X: np.ndarray, y: np.ndarray) -> Bundle:
         """Initialize state from data and solve for the first ridge coefficients."""
         _, input_dim = X.shape
-        embed = Linear(input_dim, self.plan.dim, self.rng)
-        R = np.eye(self.plan.dim)
+        embed = self._build_embed(input_dim)
+        R = self._initial_R(input_dim, X)
         continuous = Continuous(theta=embed, R=R)
         U = Projector(R).forward(embed.forward(X))
         discrete = self.refresh_pipe.run(Bundle(continuous=continuous, step=0), U, y, self.rng)
@@ -59,6 +72,23 @@ class Loop:
         _, phi, _, _ = self.features(bundle, X)
         weights = self.solver.solve(phi, y)
         return bundle.replace(weights=weights)
+
+    def _build_embed(self, input_dim: int):
+        """Pick the embedder configured on ``plan.embedder``."""
+        if self.plan.embedder == "identity":
+            return Identity()
+        return Linear(input_dim, self.plan.dim, self.rng)
+
+    def _initial_R(self, input_dim: int, X: np.ndarray) -> np.ndarray:
+        """Build the initial projection matrix ``R``.
+
+        For ``Linear`` we use ``plan.dim`` so the projected dimension
+        matches the embedder.  For ``Identity`` the projector is the
+        identity on ``input_dim``.
+        """
+        if self.plan.embedder == "identity":
+            return np.eye(input_dim)
+        return np.eye(self.plan.dim)
 
     def features(self, bundle: Bundle, X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Build features and return ``(U, phi, phig, phil)``.
@@ -73,13 +103,21 @@ class Loop:
             raise RuntimeError("R not initialized")
         proj = Projector(R)
         U = proj.forward(embed.forward(X))
-        basis = Nystrom(bundle.discrete.landmarks, bundle.discrete.whitening)
+        basis = self._build_basis_from(bundle.discrete)
         phig = basis.forward(U)
         phil = self.rbf.forward(U, bundle.discrete.anchors) if bundle.discrete.anchors is not None else np.zeros((X.shape[0], 0))
         if not self.plan.noorth and phil.size > 0:
             phil = self.orth.forward(phig, phil)
         phi = self.fuse.forward(phig, phil, cglobal=bundle.discrete.cglobal, clocal=bundle.discrete.clocal, gateval=bundle.discrete.gateval)
         return U, phi, phig, phil
+
+    def _build_basis_from(self, discrete):
+        """Reconstruct the basis object from a stored ``Discrete`` snapshot."""
+        if self.plan.basis == "greedy":
+            if discrete.basis_wz is None:
+                raise RuntimeError("Greedy basis requires basis_wz in Discrete")
+            return Greedy(discrete.landmarks, discrete.basis_wz)
+        return Nystrom(discrete.landmarks, discrete.whitening)
 
     def step(self, bundle: Bundle, X: np.ndarray, y: np.ndarray, X_val: np.ndarray | None = None, y_val: np.ndarray | None = None) -> Bundle:
         """Single training step: bump step, continuous update, possibly refresh."""

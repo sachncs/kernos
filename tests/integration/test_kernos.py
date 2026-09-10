@@ -107,3 +107,21 @@ class TestKernos:
             model = Kernos(dim=8, mbasis=16, abasis=2, lk=2, steps=1, mode=mode)
             model.fit(X, y)
             assert np.isfinite(model.score(X[:200], y[:200]))
+
+    def test_alternative_components(self) -> None:
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((1200, 3))
+        y = X[:, 0] + 0.1 * rng.standard_normal(1200)
+        model = Kernos(
+            dim=8,
+            mbasis=16,
+            abasis=2,
+            lk=2,
+            steps=1,
+            embedder="identity",
+            basis="greedy",
+            solver="iterative",
+            drift="spectral",
+        )
+        model.fit(X, y)
+        assert np.isfinite(model.score(X[:200], y[:200]))

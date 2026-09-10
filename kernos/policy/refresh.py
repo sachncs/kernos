@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from kernos.basis.greedy import Greedy
 from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
 from kernos.cache import Adaptive, Cache, Full, Stream
@@ -38,14 +39,15 @@ class Refresh:
     def run(self, bundle: Bundle, U: np.ndarray, y: np.ndarray, rng: np.random.Generator) -> Discrete:
         """Rebuild ``Discrete`` from projected embeddings ``U``.
 
-        The accumulation strategy is selected by ``plan.mode``
-        (``Buffer.FULL``/``STREAM``/``ADAPTIVE``) so the cache actually
-        affects how the fused features are aggregated before solving.
+        The basis factory (Nyström vs Greedy) is selected by
+        ``plan.basis`` and the accumulation strategy is selected by
+        ``plan.mode`` so the cache actually affects how the fused
+        features are aggregated before solving.
         """
         samples = U.shape[0]
-        basis = Nystrom.fromdata(U, self.plan.mbasis, self.whitening, rng)
+        basis, basis_wz = self._build_basis(U, rng)
         landmarks = basis.landmarks
-        whitening = basis.whitening
+        whitening = basis.whitening if self.plan.basis != "greedy" else None
         anchors = self._anchors(U, basis, y, rng) if self.plan.abasis > 0 else np.zeros((0, U.shape[1]))
         phil = self.rbf.forward(U, anchors) if anchors.size > 0 else np.zeros((samples, 0))
         denoms = self.rbf.norm(phil) if phil.size > 0 else np.zeros(0)
@@ -63,6 +65,7 @@ class Refresh:
             landmarks=landmarks,
             anchors=anchors if anchors.size > 0 else None,
             whitening=whitening,
+            basis_wz=basis_wz,
             cglobal=cglobal,
             clocal=clocal,
             denoms=denoms,
@@ -72,6 +75,18 @@ class Refresh:
             gatelogit=self.fuse.gatelogit,
         )
 
+    def _build_basis(self, U: np.ndarray, rng: np.random.Generator) -> tuple[Nystrom | Greedy, np.ndarray | None]:
+        """Select a basis factory based on ``plan.basis``.
+
+        Returns ``(basis, basis_wz)``.  ``basis_wz`` is populated only
+        for the Greedy basis.
+        """
+        if self.plan.basis == "greedy":
+            g = Greedy.fromdata(U, self.plan.mbasis, rng)
+            return g, g.Wz
+        n = Nystrom.fromdata(U, self.plan.mbasis, self.whitening, rng)
+        return n, None
+
     def _build_cache(self, mfeat: int) -> Cache:
         """Select a normal-equation accumulator based on ``plan.mode``."""
         if self.plan.mode == Buffer.STREAM:
@@ -80,7 +95,7 @@ class Refresh:
             return Adaptive(mfeat=mfeat, threshold=2 * mfeat)
         return Full()
 
-    def _anchors(self, U: np.ndarray, basis: Nystrom, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    def _anchors(self, U: np.ndarray, basis, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Select anchors via the residual-aware Sampler."""
         if self.plan.noresid:
             indices = kmeanspp(U, self.plan.abasis, rng)

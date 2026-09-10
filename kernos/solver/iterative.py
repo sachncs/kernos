@@ -38,3 +38,11 @@ class Iterative:
         if info > 0:
             print(f"warning: PCG did not converge in {self.max_iter} iterations", file=sys.stderr)
         return weights
+
+    def residual(self, phi: Array, y: Array) -> Array:
+        """Per-sample residuals after a single PCG solve.
+
+        Reuses :meth:`solve` so the residual stays consistent with the
+        iterative coefficients (no separate direct solve).
+        """
+        return y - phi @ self.solve(phi, y)

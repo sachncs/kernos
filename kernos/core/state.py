@@ -40,7 +40,8 @@ class Discrete:
     Attributes:
         landmarks: ``(mbasis, dim)``.
         anchors: ``(abasis, dim)``.
-        whitening: ``(mbasis, rank)``.
+        whitening: ``(mbasis, rank)`` for the Nyström basis.
+        basis_wz: ``(mbasis, mbasis)`` for the Greedy basis; ``None`` otherwise.
         cglobal: Global calibration scalar.
         clocal: Local calibration scalar.
         denoms: Local normalization denominators ``(abasis,)``.
@@ -53,6 +54,7 @@ class Discrete:
     landmarks: Array | None = None
     anchors: Array | None = None
     whitening: Array | None = None
+    basis_wz: Array | None = None
     cglobal: float = 1.0
     clocal: float = 1.0
     denoms: Array | None = None
