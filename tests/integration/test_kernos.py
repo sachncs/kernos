@@ -76,3 +76,11 @@ class TestKernos:
         model = Kernos()
         with pytest.raises(RuntimeError):
             model.predict(np.zeros((5, 4)))
+
+    def test_fit_too_few_samples_raises(self) -> None:
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((5, 3))
+        y = rng.standard_normal(5)
+        model = Kernos(dim=4, mbasis=16, abasis=4, lk=2, steps=1)
+        with pytest.raises(ValueError, match="n_samples"):
+            model.fit(X, y)
