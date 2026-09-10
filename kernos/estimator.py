@@ -145,11 +145,11 @@ class Kernos(BaseEstimator, RegressorMixin):
             raise ValueError(f"y must be 1-D (samples,); got shape {y.shape}")
         if X.shape[0] != y.shape[0]:
             raise ValueError(f"X and y must agree on n_samples; got X.shape[0]={X.shape[0]} vs y.shape[0]={y.shape[0]}")
-        min_required = self.mbasis + 2
+        min_required = int(np.ceil(self.mbasis / max(1.0 - self.val_frac, 1e-9))) + 2
         if X.shape[0] < min_required:
             raise ValueError(
-                f"n_samples ({X.shape[0]}) must be >= mbasis + 2 ({min_required}); "
-                "lower mbasis or supply more data"
+                f"n_samples ({X.shape[0]}) must be >= {min_required} to support "
+                f"mbasis={self.mbasis} with val_frac={self.val_frac}; lower mbasis or supply more data"
             )
         n = X.shape[0]
         n_val = max(1, int(self.val_frac * n))
