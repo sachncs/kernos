@@ -21,6 +21,8 @@ from kernos.fuse.fuse import Fuse
 from kernos.fuse.scaler import Scaler
 from kernos.sample import kmeanspp
 from kernos.solver.direct import Direct
+from kernos.solver.iterative import Iterative
+from kernos.solver.woodbury import Woodbury
 
 
 class Refresh:
@@ -34,7 +36,7 @@ class Refresh:
         sampler: Sampler,
         rbf: Rbf,
         fuse: Fuse,
-        solver: Direct,
+        solver: Direct | Iterative | Woodbury,
     ) -> None:
         self.plan = plan
         self.whitening = whitening
@@ -55,7 +57,7 @@ class Refresh:
         samples = U.shape[0]
         basis, basis_wz = self._build_basis(U, rng)
         landmarks = basis.landmarks
-        whitening = basis.whitening if self.plan.basis != "greedy" else None
+        whitening: np.ndarray | None = getattr(basis, "whitening", None)
         anchors = self._anchors(U, basis, y, rng) if self.plan.abasis > 0 else np.zeros((0, U.shape[1]))
         phil = self.rbf.forward(U, anchors) if anchors.size > 0 else np.zeros((samples, 0))
         denoms = self.rbf.norm(phil) if phil.size > 0 else np.zeros(0)
@@ -105,7 +107,7 @@ class Refresh:
             return Adaptive(mfeat=mfeat, threshold=2 * mfeat)
         return Full()
 
-    def _anchors(self, U: np.ndarray, basis, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    def _anchors(self, U: np.ndarray, basis: Nystrom | Greedy, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Select anchors via the residual-aware Sampler."""
         if self.plan.noresid:
             indices = kmeanspp(U, self.plan.abasis, rng)
