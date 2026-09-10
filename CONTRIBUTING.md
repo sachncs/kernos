@@ -164,8 +164,8 @@ def function_name(param1: type, param2: type) -> return_type:
 
 ### Architecture Principles
 
-- **Immutability**: Use frozen dataclasses with `copy_with` methods for state.
-- **Protocols**: Define interfaces as `typing.Protocol` rather than ABCs.
+- **Immutability**: Use frozen dataclasses with `replace` methods for state.
+- **Duck typing**: Define interfaces by `forward` / `run` / `solve` method shape rather than `typing.Protocol`.
 - **Numerical stability**: Always check conditioning and use jitter fallbacks.
 - **Modularity**: Keep modules decoupled; prefer composition over inheritance.
 

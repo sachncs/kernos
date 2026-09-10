@@ -65,7 +65,7 @@ class Loop:
         """
         embed = bundle.continuous.theta
         if embed is None:
-            raise RuntimeError("Embedder not found")
+            raise RuntimeError("Embed not found")
         R = bundle.continuous.R
         if R is None:
             raise RuntimeError("R not initialized")

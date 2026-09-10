@@ -100,26 +100,27 @@ Frozen configuration (`Plan`), state containers (`Continuous`, `Discrete`,
 
 ### Immutability of State
 
-`ContinuousState`, `DiscreteState`, and `FullState` are frozen dataclasses
-with `copy_with` methods. This makes refresh boundaries explicit and avoids
-surprising mutations during the discrete pipeline.
+`Continuous`, `Discrete`, and `Bundle` are frozen dataclasses with `replace`
+methods (delegating to `dataclasses.replace`). This makes refresh boundaries
+explicit and avoids surprising mutations during the discrete pipeline.
 
-### Protocols over Inheritance
+### Duck-Typed Interfaces
 
-Core interfaces (`Embedder`, `RidgeSolver`, `MemoryAccumulator`) are defined
-as protocols. This keeps modules decoupled and makes swapping implementations
-(e.g., a learned embedder or a GPU solver) straightforward.
+Core abstractions (`Embed`, `Basis`, `Refresh`, `Solver`, `Drift`, `Cache`)
+are consumed via the same `forward` / `run` / `solve` method names rather
+than `typing.Protocol`. This keeps modules decoupled without the ceremony of
+explicit protocol declarations.
 
 ### Numerical Hardening
 
-All numerical thresholds are centralized in `NumericsConfig`:
+All numerical thresholds are centralised as `stab_*` fields on `Plan`:
 
-- `tau_eig`: Eigenvalue floor for soft truncation.
-- `alpha_epsilon`: Dataset-scale epsilon for whitening stability.
-- `epsilon_c`: Minimum calibration scale to prevent feature collapse.
-- `lambda_min`: Floor on ridge regularization for SPD guarantees.
-- `eta_o`: Ridge regularizer for orthogonalization matrix invertibility.
-- `kappa_threshold`: Maximum acceptable condition number.
+- `stab_tau`: Eigenvalue floor for soft truncation.
+- `stab_alpha`: Dataset-scale epsilon for whitening stability.
+- `stab_eps`: Calibration-scale floor.
+- `stab_lmin`: Floor on ridge regularization for SPD guarantees.
+- `stab_eta`: Ridge regularizer for orthogonalization matrix invertibility.
+- `stab_kappa`: Maximum acceptable condition number.
 
 These defaults were chosen to balance accuracy and stability on synthetic
 benchmarks.
@@ -129,7 +130,8 @@ benchmarks.
 Cached mode stores the full `Phi` matrix, which is simpler and enables direct
 normal-equation construction. Streamed mode accumulates `S` and `b` online,
 reducing memory from `O(nm)` to `O(m^2)`. Parity tests confirm both modes
-produce identical coefficients when given the same data and seed.
+produce identical coefficients when given the same data and seed
+(`tests/unit/test_cache.py::TestAdaptive::test_parity_full`).
 
 ### Refresh Pipeline
 
@@ -151,19 +153,21 @@ alternative sampling or whitening strategies.
 
 ### Custom Embedder
 
-Implement the `Embedder` protocol and pass it into a custom `Loop`
-initializer (or extend `Kernos` to accept an embedder factory).
+Any object that exposes `forward(X) -> ndarray` and a `params()` pair can be
+swapped into `Loop.initialize` (or wrapped by overriding `Kernos.build_plan`).
+The reference implementations are `Linear`, `Identity`, and `Kernel` under
+`kernos.embed`.
 
 ### Alternative Refresh Policy
 
-Implement the `RefreshPolicy` protocol and replace the default
-`should_refresh` logic in `TrainingLoop.maybe_refresh`.
+Replace `Policy.decide` with a custom decision rule and pass it into
+`Loop.__init__` in place of the default `Policy(plan, drift_value)`.
 
-### GPU Solver
+### Alternative Solver
 
-Replace `DirectRidgeSolver` with a CuPy-backed solver that implements the
-`RidgeSolver` protocol. The `Loop` and `Kernos` will
-work unchanged.
+`kernos.solver` ships `Direct` (Cholesky), `Iterative` (PCG), `Woodbury`, and
+`Jacobi`. All expose the same `solve(phi, y)` signature so the `Loop` can be
+parameterised.
 
 ## Testing Strategy
 

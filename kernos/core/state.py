@@ -9,8 +9,7 @@ Three frozen dataclasses compose the full training state:
 * ``Bundle`` — composes continuous and discrete into a single immutable
   snapshot that flows through the training loop.
 
-All three use ``dataclasses.replace`` (rather than a hand-rolled
-``copy_with``) so behaviour is uniform and Pythonic.
+All three use ``dataclasses.replace`` so behaviour is uniform and Pythonic.
 """
 
 from __future__ import annotations
