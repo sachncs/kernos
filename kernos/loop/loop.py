@@ -11,7 +11,7 @@ from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
 from kernos.core.plan import Plan
 from kernos.core.rng import Rng
-from kernos.core.state import Bundle, Continuous
+from kernos.core.state import Bundle, Continuous, Discrete
 from kernos.correct.orth import Ridge
 from kernos.correct.rbf import Rbf
 from kernos.correct.sampler import Sampler
@@ -54,7 +54,7 @@ class Loop:
         self.Rref: np.ndarray | None = None
 
     @staticmethod
-    def _build_solver(plan: Plan):
+    def _build_solver(plan: Plan) -> Direct | Iterative | Woodbury:
         """Pick the ridge solver configured on ``plan.solver``."""
         if plan.solver == "iterative":
             return Iterative(plan.ridge)
@@ -77,7 +77,7 @@ class Loop:
         weights = self.solver.solve(phi, y)
         return bundle.replace(weights=weights)
 
-    def _build_embed(self, input_dim: int):
+    def _build_embed(self, input_dim: int) -> Linear | Identity:
         """Pick the embedder configured on ``plan.embedder``."""
         if self.plan.embedder == "identity":
             return Identity()
@@ -127,12 +127,14 @@ class Loop:
         )
         return U, phi, phig, phil
 
-    def _build_basis_from(self, discrete):
+    def _build_basis_from(self, discrete: Discrete) -> Nystrom | Greedy:
         """Reconstruct the basis object from a stored ``Discrete`` snapshot."""
         if self.plan.basis == "greedy":
-            if discrete.basis_wz is None:
-                raise RuntimeError("Greedy basis requires basis_wz in Discrete")
+            if discrete.basis_wz is None or discrete.landmarks is None:
+                raise RuntimeError("Greedy basis requires basis_wz and landmarks in Discrete")
             return Greedy(discrete.landmarks, discrete.basis_wz)
+        if discrete.landmarks is None or discrete.whitening is None:
+            raise RuntimeError("Nystrom basis requires landmarks and whitening in Discrete")
         return Nystrom(discrete.landmarks, discrete.whitening)
 
     def step(
