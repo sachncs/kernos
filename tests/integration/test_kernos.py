@@ -35,6 +35,13 @@ class TestKernos:
         model.set_params(dim=8)
         assert model.dim == 8
 
+    def test_set_params_validates(self) -> None:
+        model = Kernos()
+        with pytest.raises(ValueError):
+            model.set_params(ridge=1e-12)
+        with pytest.raises(ValueError):
+            model.set_params(mbasis=4, abasis=8)
+
     def test_clone(self) -> None:
         model = Kernos(dim=4, mbasis=16)
         cloned = clone(model)
