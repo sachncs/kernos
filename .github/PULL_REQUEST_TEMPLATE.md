@@ -17,7 +17,7 @@ Closes # (issue number)
 Describe the tests you ran or added to verify your changes:
 
 - [ ] Unit tests pass (`pytest tests/unit/ -v`)
-- [ ] Numerical tests pass (`pytest tests/numerical/ -v`)
+- [ ] Numerical tests pass (`pytest tests/numeric/ -v`)
 - [ ] Integration tests pass (`pytest tests/integration/ -v`)
 - [ ] New tests added (if applicable)
 
