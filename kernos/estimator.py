@@ -7,6 +7,8 @@ A drop-in scikit-learn-compatible estimator with ``fit``, ``predict``,
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 
@@ -235,3 +237,15 @@ class Kernos(BaseEstimator, RegressorMixin):
     def get_config(self) -> dict:
         """Return a serializable snapshot of all hyperparameters."""
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and k != "loop_" and k != "bundle_" and k != "predictor_" and k != "basis_" and k != "X_train_" and k != "plan_" and k != "n_features_in_"}
+
+    def set_params(self, **params: Any) -> "Kernos":
+        """Set hyperparameters and re-run ``Plan`` validation immediately.
+
+        The default ``BaseEstimator.set_params`` only mutates
+        attributes, so inconsistent combinations (e.g. ``abasis >=
+        mbasis``) would not surface until the next ``fit``.  Build a
+        transient ``Plan`` to fail fast on bad config.
+        """
+        super().set_params(**params)
+        self.build_plan()
+        return self
