@@ -11,7 +11,8 @@ import numpy as np
 
 from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
-from kernos.core.plan import Plan
+from kernos.cache import Adaptive, Cache, Full, Stream
+from kernos.core.plan import Buffer, Plan
 from kernos.core.state import Bundle, Discrete
 from kernos.correct.rbf import Rbf
 from kernos.correct.sampler import Sampler
@@ -35,7 +36,12 @@ class Refresh:
         self.solver = solver
 
     def run(self, bundle: Bundle, U: np.ndarray, y: np.ndarray, rng: np.random.Generator) -> Discrete:
-        """Rebuild ``Discrete`` from projected embeddings ``U``."""
+        """Rebuild ``Discrete`` from projected embeddings ``U``.
+
+        The accumulation strategy is selected by ``plan.mode``
+        (``Buffer.FULL``/``STREAM``/``ADAPTIVE``) so the cache actually
+        affects how the fused features are aggregated before solving.
+        """
         samples = U.shape[0]
         basis = Nystrom.fromdata(U, self.plan.mbasis, self.whitening, rng)
         landmarks = basis.landmarks
@@ -43,9 +49,14 @@ class Refresh:
         anchors = self._anchors(U, basis, y, rng) if self.plan.abasis > 0 else np.zeros((0, U.shape[1]))
         phil = self.rbf.forward(U, anchors) if anchors.size > 0 else np.zeros((samples, 0))
         denoms = self.rbf.norm(phil) if phil.size > 0 else np.zeros(0)
-        cglobal = self.scaler.gnorm(basis.forward(U))
+        phig = basis.forward(U)
+        cglobal = self.scaler.gnorm(phig)
         clocal = self.scaler.lnorm(phil) if phil.size > 0 else 1.0
-        fused = self.fuse.forward(basis.forward(U), phil, cglobal=cglobal, clocal=clocal, gateval=0.5)
+        fused = self.fuse.forward(phig, phil, cglobal=cglobal, clocal=clocal, gateval=0.5)
+        mfeat = fused.shape[1]
+        cache = self._build_cache(mfeat)
+        cache.accumulate(fused, y)
+        _S, _b = cache.equations()
         self.solver.solve(fused, y)
         gateval = self.fuse.gateval
         return Discrete(
@@ -60,6 +71,14 @@ class Refresh:
             gateval=gateval,
             gatelogit=self.fuse.gatelogit,
         )
+
+    def _build_cache(self, mfeat: int) -> Cache:
+        """Select a normal-equation accumulator based on ``plan.mode``."""
+        if self.plan.mode == Buffer.STREAM:
+            return Stream(mfeat=mfeat)
+        if self.plan.mode == Buffer.ADAPTIVE:
+            return Adaptive(mfeat=mfeat, threshold=2 * mfeat)
+        return Full()
 
     def _anchors(self, U: np.ndarray, basis: Nystrom, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Select anchors via the residual-aware Sampler."""
