@@ -100,21 +100,43 @@ class Loop:
         return bundle
 
     def maybe_refresh(self, bundle: Bundle, X_val: np.ndarray, y_val: np.ndarray) -> Bundle:
-        """Evaluate the refresh policy and run ``Refresh`` if it triggers."""
+        """Evaluate the refresh policy and run ``Refresh`` if it triggers.
+
+        The validation gain (drop in RMSE on ``X_val`` after the
+        refresh) is computed and threaded into ``Policy.decide`` so the
+        ``gain`` threshold configured on ``Plan`` is actually enforced.
+        Refreshes that fail to beat the threshold are discarded.
+        """
+        if X_val.shape[0] < self.plan.mbasis:
+            return bundle
         if self.Rref is None:
             drift_value = 0.001 * bundle.step
         else:
             drift_value = self.drift_metric.measure(bundle.continuous.R, self.Rref)
+        baseline_rmse = self._val_rmse(bundle, X_val, y_val)
+        candidate = self._apply_refresh(bundle, X_val, y_val)
+        new_rmse = self._val_rmse(candidate, X_val, y_val)
+        gain = baseline_rmse - new_rmse
         policy = Policy(self.plan, drift_value)
-        if policy.decide(bundle, gain=1.0):
-            U_val = Projector(bundle.continuous.R).forward(bundle.continuous.theta.forward(X_val))
-            new_disc = self.refresh_pipe.run(bundle, U_val, y_val, self.rng)
-            new_disc = replace(new_disc, tlast=bundle.step)
-            bundle = bundle.replace(discrete=new_disc)
-            _, phi, _, _ = self.features(bundle, X_val)
-            weights = self.solver.solve(phi, y_val)
-            bundle = bundle.replace(weights=weights)
+        if policy.decide(candidate, gain=gain):
+            bundle = candidate
             self.Rref = bundle.continuous.R.copy()
             for cb in self.callbacks:
                 cb.onrefresh(bundle.step, bundle)
         return bundle
+
+    def _apply_refresh(self, bundle: Bundle, X_val: np.ndarray, y_val: np.ndarray) -> Bundle:
+        """Run the refresh pipeline on ``(X_val, y_val)`` and solve for weights."""
+        U_val = Projector(bundle.continuous.R).forward(bundle.continuous.theta.forward(X_val))
+        new_disc = self.refresh_pipe.run(bundle, U_val, y_val, self.rng)
+        new_disc = replace(new_disc, tlast=bundle.step)
+        candidate = bundle.replace(discrete=new_disc)
+        _, phi, _, _ = self.features(candidate, X_val)
+        weights = self.solver.solve(phi, y_val)
+        return candidate.replace(weights=weights)
+
+    def _val_rmse(self, bundle: Bundle, X_val: np.ndarray, y_val: np.ndarray) -> float:
+        """RMSE of the current weights on ``(X_val, y_val)``."""
+        _, phi, _, _ = self.features(bundle, X_val)
+        pred = phi @ bundle.weights if bundle.weights is not None else np.zeros(X_val.shape[0])
+        return float(np.sqrt(np.mean((y_val - pred) ** 2)))
