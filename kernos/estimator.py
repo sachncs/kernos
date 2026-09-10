@@ -188,10 +188,19 @@ class Kernos(BaseEstimator, RegressorMixin):
         return self.predictor_.forward(phi)
 
     def score(self, X: np.ndarray, y: np.ndarray) -> float:
-        """Return the R² score on ``(X, y)``."""
+        """Return the R² score on ``(X, y)``.
+
+        Returns ``0.0`` when ``y`` is constant: R² is undefined in that
+        case and the previous behaviour silently propagated ``nan``,
+        which broke downstream comparisons.
+        """
         from kernos.bench.metric import r2
 
-        return r2(np.asarray(y), self.predict(X))
+        y_arr = np.asarray(y, dtype=np.float64)
+        out = r2(y_arr, self.predict(X))
+        if not np.isfinite(out):
+            return 0.0
+        return out
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray) -> "Kernos":
         """Run exactly one continuous update on ``(X, y)``."""
