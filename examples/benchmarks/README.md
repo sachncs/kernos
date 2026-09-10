@@ -1,7 +1,6 @@
-"""Benchmarks demos for Kernos.
+# Benchmarks demos for Kernos
 
-Quick, runnable scripts showcasing the public API. Run any of them
-with ``python -m examples.benchmarks.<name>``.
+Quick, runnable scripts showcasing the public API. Run any of them with `python -m examples.benchmarks.<name>`.
 
 | Demo | What it shows |
 |---|---|
@@ -11,8 +10,4 @@ with ``python -m examples.benchmarks.<name>``.
 | `ablation_walk` | One ablation flag at a time on synthetic data. |
 | `grid_search_demo` | `GridSearchCV` integration with Kernos. |
 
-All demos write a small result file under
-`examples/benchmarks/results/` so multiple runs can be compared.
-"""
-
-from __future__ import annotations
+All demos write a small result file under `examples/benchmarks/results/` so multiple runs can be compared.
