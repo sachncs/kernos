@@ -9,6 +9,7 @@ Kernos is a research implementation of **refresh-aware hybrid continuous-discret
 ### When should I use Kernos?
 
 Kernos is designed for:
+
 - Large-scale kernel regression where standard Nyström methods are too slow
 - Streaming or online learning settings where data arrives sequentially
 - Problems requiring adaptive kernel basis updates without full recomputation
@@ -40,10 +41,11 @@ pip install -e ".[dev]"
 
 ## Usage
 
-### How do I choose between cached and streamed memory modes?
+### How do I choose between memory modes?
 
-- **Cached** (`memory_mode="cached"`): Stores the full feature matrix. Use when memory is not a constraint and you want simplicity.
-- **Streamed** (`memory_mode="streamed"`): Accumulates normal equations directly. Use when `n` is very large and you cannot afford O(nm) memory.
+- **Cached** (`mode=Buffer.FULL`): Stores the full normal-equation inputs. Use when memory is not a constraint and you want simplicity.
+- **Streamed** (`mode=Buffer.STREAM`): Accumulates `(S, b)` directly. Use when `n` is very large and you cannot afford O(nm) memory.
+- **Adaptive** (`mode=Buffer.ADAPTIVE`): Switches from cached to streamed once a sample-count threshold is crossed.
 
 ### What do the ablation flags do?
 
@@ -51,13 +53,13 @@ Ablation flags disable specific components for ablation studies:
 
 | Flag | Effect |
 |------|--------|
-| `disable_refresh` | Never refresh the discrete basis |
-| `disable_hysteresis` | Always consider refresh (ignore hysteresis) |
-| `disable_cooldown` | No minimum gap between refreshes |
-| `disable_residual_aware_anchors` | Use coverage-only anchor sampling |
-| `disable_orthogonalization` | Skip local feature orthogonalization |
-| `disable_diversity_penalty` | Remove diversity regularization |
-| `static_scaling` | Freeze calibration after first refresh |
+| `noref` | Never refresh the discrete basis |
+| `nohyst` | Always consider refresh (ignore hysteresis) |
+| `nocool` | Set effective cooldown to zero |
+| `noresid` | Use coverage-only anchor sampling |
+| `noorth` | Skip local feature orthogonalization |
+| `nodiv` | Remove diversity regularization |
+| `nofreeze` | Keep calibration updating after first refresh |
 
 ### How do I set a random seed for reproducibility?
 
@@ -69,26 +71,16 @@ model = Kernos(seed=42)
 
 ### Can I use custom embedding functions?
 
-Yes. Implement the `Embedder` protocol and use it with a custom `TrainingLoop`:
-
-```python
-from kernos.core.types import Array
-
-class MyEmbedder:
-    def embed(self, X: np.ndarray) -> np.ndarray:
-        return my_custom_embedding(X)
-```
-
-See `docs/architecture.md` for details.
+Yes. Any object that exposes a `forward(X) -> ndarray` method with a finite-difference steppable outer objective can be dropped in as the embedder. See `kernos/embed/` for the existing `Linear`, `Kernel`, and `Identity` reference implementations.
 
 ## Performance
 
-### How many landmarks (`m_g`) should I use?
+### How many landmarks (`mbasis`) should I use?
 
 General guidelines:
 
-| Dataset size | Recommended `m_g` |
-|-------------|-------------------|
+| Dataset size | Recommended `mbasis` |
+|-------------|-----------------------|
 | < 1K samples | 32 - 64 |
 | 1K - 10K samples | 128 - 512 |
 | 10K - 100K samples | 512 - 2048 |
@@ -98,33 +90,35 @@ Start small and increase if needed. More landmarks = better approximation but hi
 
 ### How do I reduce training time?
 
-- Reduce `max_steps`
-- Reduce `m_g` (global landmarks) and `m_l` (local anchors)
-- Use `disable_refresh=True` to skip discrete refresh entirely
-- Increase `t_cool` to refresh less often
+- Reduce `steps`
+- Reduce `mbasis` (global landmarks) and `abasis` (local anchors)
+- Use `noref=True` to skip discrete refresh entirely
+- Increase `cool` to refresh less often
 
 ## Troubleshooting
 
 ### I get a conditioning warning. What does it mean?
 
-The solver detected that the normal equation matrix is ill-conditioned (condition number exceeds `kappa_threshold`). This can happen when:
-- `lambda_reg` is too small
+The solver detected that the normal-equation matrix is ill-conditioned (condition number exceeds `stab_kappa`). This can happen when:
+
+- `ridge` is too small
 - Features are nearly collinear
 - The dataset has very different scales
 
-Try increasing `lambda_reg` or preprocessing your data (e.g., standard scaling).
+Try increasing `ridge` or preprocessing your data (e.g., standard scaling).
 
 ### The model seems to not converge. What should I try?
 
-- Increase `max_steps`
-- Decrease `lambda_reg` (but watch for conditioning issues)
-- Adjust `delta_hi` (lower = more frequent refreshes)
+- Increase `steps`
+- Decrease `ridge` (but watch for conditioning issues)
+- Adjust `drift_hi` (lower = more frequent refreshes)
 - Check that your data is properly scaled
-- Try different `embedding_dim` and `m_g` values
+- Try different `dim` and `mbasis` values
 
 ### How do I report bugs?
 
 Please open an issue on GitHub using the bug report template. Include:
+
 - A minimal reproducible example
 - Full error traceback
 - Python and package versions
