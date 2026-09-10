@@ -122,6 +122,8 @@ chore(deps): bump numpy to >=1.25
 - Write clear, descriptive commit messages.
 - Add screenshots or plots for visual changes.
 - Reference related issues with `Closes #<number>`.
+- Reviewers are auto-assigned via `.github/CODEOWNERS`; update that file
+  if you take ownership of a directory.
 
 ## Coding Standards
 
