@@ -51,15 +51,17 @@ class Profile(Callback):
     def __init__(self) -> None:
         self.step_times: list[float] = []
         self.refresh_times: list[float] = []
-        self.tstart: float = 0.0
+        self._tstep: float = 0.0
+        self._trefresh: float = 0.0
 
     def onstep(self, step: int, bundle: Bundle) -> None:
-        self.tstart = time.perf_counter()
+        self._tstep = time.perf_counter()
 
     def oneval(self, step: int, metrics: dict[str, float]) -> None:
-        self.step_times.append(time.perf_counter() - self.tstart)
+        self.step_times.append(time.perf_counter() - self._tstep)
 
     def onrefresh(self, step: int, bundle: Bundle) -> None:
-        t = time.perf_counter()
-        self.refresh_times.append(t)
-        self.tstart = t
+        now = time.perf_counter()
+        if self._trefresh > 0.0:
+            self.refresh_times.append(now - self._trefresh)
+        self._trefresh = now

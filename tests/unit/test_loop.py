@@ -100,3 +100,6 @@ class TestCallbacks:
         callback_profile.oneval(1, {"rmse": 0.1})
         callback_profile.onrefresh(1, bundle)
         assert len(callback_profile.step_times) == 1
+        callback_profile.onrefresh(2, bundle)
+        assert len(callback_profile.refresh_times) == 1
+        assert all(d >= 0.0 for d in callback_profile.refresh_times)
