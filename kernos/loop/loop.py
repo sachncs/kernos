@@ -20,6 +20,7 @@ from kernos.fuse.fuse import Fuse
 from kernos.fuse.scaler import Scaler
 from kernos.loop.callback import Callback
 from kernos.loop.outerstep import Outerstep
+from kernos.policy.budget import Budget
 from kernos.policy.drift import Frobenius
 from kernos.policy.policy import Policy
 from kernos.policy.refresh import Refresh
@@ -43,6 +44,7 @@ class Loop:
         self.outerstep = Outerstep(plan)
         self.orth = Ridge(plan.stab_eta)
         self.drift_metric = Frobenius()
+        self.budget = Budget(plan.budget)
         self.Rref: np.ndarray | None = None
 
     def initialize(self, X: np.ndarray, y: np.ndarray) -> Bundle:
@@ -118,8 +120,9 @@ class Loop:
         new_rmse = self._val_rmse(candidate, X_val, y_val)
         gain = baseline_rmse - new_rmse
         policy = Policy(self.plan, drift_value)
-        if policy.decide(candidate, gain=gain):
+        if policy.decide(candidate, gain=gain) and self.budget.can(self.plan.rcost):
             bundle = candidate
+            self.budget.spend(self.plan.rcost)
             self.Rref = bundle.continuous.R.copy()
             for cb in self.callbacks:
                 cb.onrefresh(bundle.step, bundle)
