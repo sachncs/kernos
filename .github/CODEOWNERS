@@ -1,0 +1,5 @@
+# Default owners for everything; tighten per directory as the project grows.
+* @sachncs
+
+# Documentation requires review from the docs maintainer.
+/docs/ @sachncs
