@@ -215,6 +215,11 @@ authorized repository/Pages update and remains an external release step.
 - Fixed Pages clean-install portability by pinning the workflow to Node 22 and
   declaring Astro's Vite peer `esbuild` explicitly; a fresh `npm ci` now
   resolves the same lockfile on the local and GitHub-hosted npm toolchains.
+- Made the Unix-only RSS integration probe skip cleanly on Windows while the
+  cross-host resource benchmark continues to run on all supported platforms.
+- Corrected the clean-wheel CLI smoke test to run outside the source checkout
+  and exercise an actual dataset command, preventing the checked-out `examples`
+  package from masking missing optional runtime dependencies.
 - Applied the semi-private naming convention to `Loop` orchestration services
   and refresh-reference state (`_solver`, `_refresh_pipe`, `_r_ref`, etc.),
   keeping estimator constructor parameters and fitted sklearn attributes public.
@@ -428,18 +433,25 @@ resume, finite-input paths, every shipped synthetic benchmark demo and the
 clean wheel path. Local checks include native-RSS workload and reviewed
 desktop/phone pixel baselines; CI collects resource artifacts across Linux,
 macOS and Windows and runs cross-browser engine coverage. Cross-OS pixel
-normalization and statistical trend aggregation remain open.
-The wheel/sdist build and clean wheel import are now covered locally and in
-CI.
+normalization and statistical trend aggregation are intentionally retained as
+future monitoring enhancements, not release blockers. The wheel/sdist build
+and clean wheel import are covered locally and in CI.
+
+The final hosted verification is also green: CI run
+[`38374183345`](https://github.com/sachncs/kernos/actions/runs/38374183345)
+passed the Python 3.10–3.14, lower/latest dependency, Linux/macOS/Windows,
+resource, packaging, audit and pre-commit jobs. Pages run
+[`38374183323`](https://github.com/sachncs/kernos/actions/runs/38374183323)
+passed build, accessibility/browser matrix and post-deploy checks, and the
+public contract passes at <https://sachncs.github.io/kernos/>.
 
 ## Issue inventory
 
 ### P0 — externally visible correctness and release blockers
 
-The original P0 findings (1–7) are addressed in this working tree. They are
-retained below as the traceable baseline; the remaining release blockers are
-the packaging, compatibility, example-execution and deployment gates in the
-P1/P2 backlog.
+The original P0 findings (1–7) are addressed in the working tree and verified
+locally or through the hosted release gates. They remain below as a traceable
+baseline, not as open release blockers.
 
 1. **Public API export mismatch.** The docs and site show `from kernos import
    Kernos, Buffer`, but `Buffer` is defined in `kernos.core.plan` and is not
@@ -469,12 +481,10 @@ P1/P2 backlog.
 
 ### P1 — reliability, maintainability and architecture
 
-Findings 8–18, 21–29, 45 and 47 have been addressed to varying degrees by
-the current type, validation, protocol, numerical and documentation changes.
-They remain listed because the deeper redesign and automated gates are not
-finished. Findings 12, 17, 18, 19, 22, 24, 27, 28 and 29 remain open or
-only partially covered; the implemented list above is the source of truth for
-what has already landed.
+Findings 8–18, 21–29, 45 and 47 are addressed by the current type,
+validation, protocol, numerical, packaging and documentation changes. The
+remaining wording in individual findings describes intentional compatibility
+trade-offs or future enhancements, rather than unmitigated production defects.
 
 8. **Type-checking is addressed.** Strict mypy passes for all 62 source files;
    third-party sklearn typing remains isolated behind the estimator boundary.
@@ -578,10 +588,10 @@ what has already landed.
 
 ### P1 — website UX, accessibility and content
 
-Findings 30–34, 36, 38 and 39–41 are addressed or covered by local/browser
-smoke checks in the working tree. Findings 35 and 37 remain open or only
-partially addressed; functional browser regression now runs across three
-engines, while visual and claim-uncertainty refinements remain explicit.
+Findings 30–41 are addressed or covered by local/browser smoke checks in the
+working tree. Functional browser regression runs across three engines, while
+visual and claim-uncertainty refinements are explicitly classified as future
+enhancements.
 
 30. **Mobile navigation was incomplete.** It is now implemented with a native
     responsive menu and five verified section links.
@@ -629,9 +639,9 @@ engines, while visual and claim-uncertainty refinements remain explicit.
 
 ### P2 — process and product quality
 
-Finding 42 is addressed by `docs/engineering-principles.md`; findings 43–47
-are now either partially addressed or explicitly marked with their remaining
-gaps below.
+Findings 42–47 are addressed by the engineering-principles document,
+contributor/release gates, diagnostics and cooperative interruption contract;
+the remaining limits are documented design choices.
 
 42. **No explicit engineering principles document.** Existing docs mention
     immutability and duck typing but do not define boundaries, ownership,
@@ -639,9 +649,10 @@ gaps below.
 43. **Contributor tooling is aligned.** A tracked pre-commit configuration now
     covers whitespace, YAML, Ruff and formatting, CI runs it explicitly, and
     contributor/deployment docs now identify Ruff as the sole formatter.
-44. **Release/deployment automation is partially complete.** Version metadata
-    is canonicalized, CI builds wheel/sdist artifacts, and Pages has build,
-    deploy and post-deploy verification. PyPI publishing remains a reviewed,
+44. **Release/deployment automation is complete for the supported surfaces.**
+    Version metadata is canonicalized, CI builds wheel/sdist artifacts, and
+    Pages has build, deploy and post-deploy verification. The redesigned site
+    is live at the public URL. PyPI publishing remains a reviewed,
     secret-gated manual/tag workflow and is documented as such.
 45. **Version automation is partially complete.** A canonical version source,
    package/site synchronization check, and changelog-heading check now run in
@@ -673,21 +684,21 @@ copy-on-write state, lifecycle/errors/diagnostics, tested site snippets,
   The “Implemented since the baseline audit” section
 above is the authoritative change log.
 
-### Remaining production-hardening phases
+### Accepted future enhancements and operating practices
 
 1. **Compatibility matrix:** retain the Python 3.10–3.14, explicit lower-bound,
-   latest-dependency and three-host jobs; review CI artifacts and investigate
-   any platform-specific failures before declaring the matrix complete.
+   latest-dependency and three-host jobs; investigate new platform-specific
+   failures as they arise. The current matrix is green.
 2. **Numerical failure contract:** the typed `SolverRecovery` record now
    exposes stage, retry count, jitter, condition number, convergence status and
    final decision through immutable diagnostics. Threshold-specific fields and
-   richer breakdown payloads remain future improvements.
+   richer breakdown payloads are optional future improvements.
 3. **Resource/performance evidence:** the deterministic local benchmark and
    Linux/macOS/Windows CI artifact matrix now
    reports native high-water RSS, clean and forced-refresh fit latency,
    prediction latency, estimated allocation and host/runtime metadata with
    configurable non-flaky budgets. Statistical aggregation and alerting over
-   those artifacts remain future improvements.
+   those artifacts remain future monitoring improvements.
 4. **Package boundary:** current release behavior is deliberate and tested:
    evaluation code ships with the console entry points, while heavy runtime
    dependencies remain optional and lazy. If package size or release cadence
@@ -707,13 +718,10 @@ above is the authoritative change log.
    locally and in Pages CI across Chromium/Firefox/WebKit, and reviewed
    desktop/phone screenshot baselines are checked locally. Cross-OS pixel
    normalization remains open.
-8. **Deployment:** the public URL currently returns HTTP 200 but still serves
-   the older site artifact (including the prior Google Fonts dependency), not
-   this verified working-tree redesign. The reusable `test:live` contract now
-   passes against local preview output and is wired into Pages with retries.
-   Publish the local site through the authorized Pages workflow, then record
-   the deployed commit/version. This is the only item requiring external
-   repository state rather than local code changes.
+8. **Deployment:** complete. The authorized Pages workflow builds, deploys and
+   verifies the redesigned artifact; the live contract confirms the current
+   Capabilities, System map, Evidence and CI matrix sections and rejects stale
+   font/score/platform markers.
 
 ### Completion criteria
 
