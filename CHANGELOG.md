@@ -97,4 +97,4 @@ covered in `[Unreleased]` and `[0.2.0]`.
 - Evaluation framework with synthetic datasets, baselines, and metrics
 - Comprehensive test suite (unit, numerical, integration) with ~91% coverage
 - Design document (docs/design.md)
-- Real-world evaluation examples (examples/eval_real_world/)
+- Real-world evaluation examples (`examples/evaluation/`)

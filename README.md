@@ -157,7 +157,8 @@ kernos-analyze --results results/results.csv --output_dir results
 ```
 
 This runs the full evaluation suite on a single HuggingFace dataset
-at the `Small` budget tier, then produces:
+at the `Small` budget tier, then writes generated artifacts to the local
+`results/` directory:
 
 - `results/results.md` — markdown tables
 - `results/results.csv` — machine-readable metrics
@@ -402,10 +403,11 @@ python -m build
 
 ### Release
 
-1. Bump version in `pyproject.toml`.
+1. Bump the canonical version in `kernos/_version.py`.
 2. Update `CHANGELOG.md`.
-3. Commit with a `version:X.Y.Z` message.
-4. Tag and push — CI publishes to PyPI.
+3. Run `python scripts/check-version.py` and `make verify`.
+4. Create and push a `vX.Y.Z` tag — the release workflow validates and
+   publishes the artifacts through PyPI trusted publishing.
 
 ---
 

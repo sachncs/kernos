@@ -37,12 +37,7 @@ evaluation/
 │   ├── csv_writer.py         # write_results_csv
 │   ├── plots.py              # plot_pareto_fronts, plot_ablation_bars
 │   └── latex.py              # export_latex_table
-└── results/                  # Output directory (created at runtime)
-    ├── results.md
-    ├── results.csv
-    ├── pareto_{dataset}.png
-    ├── ablations_{dataset}_{tier}.png
-    └── results_table.tex
+└── results/                  # Runtime output directory
 ```
 
 ---
@@ -130,6 +125,11 @@ kernos-eval --datasets all --tiers all --n_seeds 5 --no_ablations --output_dir r
 ---
 
 ## Outputs
+
+The commands write their generated reports to the directory passed with
+`--output_dir`. The directory is intentionally not kept under version control;
+the repository only retains the small benchmark summary consumed by the public
+site.
 
 ### Metrics (per dataset × model × tier)
 

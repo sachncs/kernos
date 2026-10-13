@@ -32,13 +32,7 @@ python -m build
 twine check dist/*
 ```
 
-This creates:
-
-```
-dist/
-├── kernos-0.2.0-py3-none-any.whl
-└── kernos-0.2.0.tar.gz
-```
+This creates a versioned wheel and source archive under `dist/`.
 
 ## Publishing to PyPI
 
