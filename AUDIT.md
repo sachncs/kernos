@@ -212,6 +212,9 @@ authorized repository/Pages update and remains an external release step.
 - Corrected iterative-solver telemetry: PCG now has a backward-compatible
   detailed path that reports the actual convergence/breakdown iteration rather
   than incorrectly reporting the configured maximum after successful solves.
+- Fixed Pages clean-install portability by pinning the workflow to Node 22 and
+  declaring Astro's Vite peer `esbuild` explicitly; a fresh `npm ci` now
+  resolves the same lockfile on the local and GitHub-hosted npm toolchains.
 - Applied the semi-private naming convention to `Loop` orchestration services
   and refresh-reference state (`_solver`, `_refresh_pipe`, `_r_ref`, etc.),
   keeping estimator constructor parameters and fitted sklearn attributes public.
