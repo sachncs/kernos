@@ -264,7 +264,8 @@ jobs:
             "import kernos; from kernos import Buffer, Kernos; \
             assert kernos.__version__ == '0.2.0'; \
             assert Buffer.FULL.value == 'full'; assert Kernos.__name__ == 'Kernos'"
-          /tmp/kernos-wheel-smoke/bin/python scripts/smoke-wheel.py
+          /tmp/kernos-wheel-smoke/bin/python "$GITHUB_WORKSPACE/scripts/smoke-wheel.py"
+          cd /tmp
           set +e
           output=$(/tmp/kernos-wheel-smoke/bin/kernos-eval --help 2>&1)
           exit_code=$?
