@@ -267,7 +267,7 @@ jobs:
           /tmp/kernos-wheel-smoke/bin/python "$GITHUB_WORKSPACE/scripts/smoke-wheel.py"
           cd /tmp
           set +e
-          output=$(/tmp/kernos-wheel-smoke/bin/kernos-eval --help 2>&1)
+          output=$(/tmp/kernos-wheel-smoke/bin/kernos-eval --datasets Diabetes 2>&1)
           exit_code=$?
           set -e
           test "$exit_code" -ne 0
