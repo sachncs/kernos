@@ -2,25 +2,31 @@
 
 from __future__ import annotations
 
-import resource
 import sys
 import time
 
 import numpy as np
 import pytest
 
+try:
+    import resource as _resource
+except ImportError:  # pragma: no cover - exercised on Windows hosts.
+    _resource = None
+
 from kernos import Kernos
 
 
 def _max_rss_mb() -> float:
     """Return process high-water RSS in MiB on Unix platforms."""
-    value = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    assert _resource is not None
+    value = float(_resource.getrusage(_resource.RUSAGE_SELF).ru_maxrss)
     # macOS reports bytes; Linux reports KiB.
     divisor = 1024.0 * 1024.0 if sys.platform == "darwin" else 1024.0
     return value / divisor
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(_resource is None, reason="resource module is unavailable")
 def test_small_fit_stays_within_resource_budget() -> None:
     """Keep a representative fit from regressing into an unbounded workload."""
     rng = np.random.default_rng(123)
