@@ -117,3 +117,4 @@ jobs:
           done
           echo "deployed site did not satisfy the live contract" >&2
           exit 1
+        working-directory: site
