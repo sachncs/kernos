@@ -100,6 +100,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install live-check dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: site
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
