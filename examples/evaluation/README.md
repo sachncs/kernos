@@ -136,7 +136,7 @@ kernos-eval --datasets all --tiers all --n_seeds 5 --no_ablations --output_dir r
 - **RMSE / MAE / R²** — predictive quality.
 - **Train time (s)** — wall-clock fit time.
 - **Inference latency (s)** — per-batch predict time.
-- **Peak memory (MB)** — max resident memory via `tracemalloc`.
+- **Peak Python allocation (MB)** — memory tracked by `tracemalloc`; native NumPy allocator/RSS usage is not included.
 - **Refresh count** — number of discrete refreshes triggered.
 - **Condition proxy** — `κ(ΦᵀΦ + λI)`.
 

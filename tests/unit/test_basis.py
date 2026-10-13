@@ -13,6 +13,15 @@ from kernos.core.error import ShapeError
 
 
 class TestWhitening:
+    def test_rejects_invalid_configuration_and_inputs(self) -> None:
+        with pytest.raises(ValueError, match="tau"):
+            Whitening(0.0, 1e-5, 1e-8)
+        whitening = Whitening(1e-6, 1e-5, 1e-8)
+        with pytest.raises(ValueError, match="2-D"):
+            whitening.kernel(np.ones(4))
+        with pytest.raises(ValueError, match="symmetric"):
+            whitening.build(np.array([[1.0, 2.0], [0.0, 1.0]]))
+
     def test_kernel_shape(self, rng: np.random.Generator) -> None:
         Z = rng.standard_normal((8, 4))
         w = Whitening(1e-6, 1e-5, 1e-8)
@@ -35,6 +44,11 @@ class TestWhitening:
 
 
 class TestNystrom:
+    def test_rejects_feature_width_mismatch(self, rng: np.random.Generator, whitening: Whitening) -> None:
+        basis = Nystrom.fromdata(rng.standard_normal((12, 4)), 4, whitening, rng)
+        with pytest.raises(ValueError, match="feature width"):
+            basis.forward(rng.standard_normal((3, 5)))
+
     def test_fromdata(self, rng: np.random.Generator, whitening: Whitening) -> None:
         U = rng.standard_normal((40, 4))
         basis = Nystrom.fromdata(U, 16, whitening, rng)
@@ -58,6 +72,12 @@ class TestNystrom:
 
 
 class TestRandom:
+    def test_rejects_invalid_configuration(self, rng: np.random.Generator) -> None:
+        with pytest.raises(ValueError, match="gamma"):
+            Random.fromdata(4, 8, rng, gamma=0.0)
+        with pytest.raises(ValueError, match="input_dim"):
+            Random.fromdata(0, 8, rng)
+
     def test_fromdata(self, rng: np.random.Generator) -> None:
         basis = Random.fromdata(4, 64, rng, gamma=1.0)
         assert basis.omega.shape == (64, 4)
@@ -71,6 +91,10 @@ class TestRandom:
 
 
 class TestGreedy:
+    def test_rejects_too_many_landmarks(self, rng: np.random.Generator) -> None:
+        with pytest.raises(ValueError, match="mbasis"):
+            Greedy.fromdata(rng.standard_normal((4, 2)), 5, rng)
+
     def test_fromdata(self, rng: np.random.Generator) -> None:
         basis = Greedy.fromdata(rng.standard_normal((40, 4)), 16, rng)
         assert basis.landmarks.shape == (16, 4)

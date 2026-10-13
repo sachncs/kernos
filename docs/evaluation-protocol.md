@@ -111,7 +111,7 @@ Computed per single run (`reporting/result_record.py`):
 | R² | `r2` | Coefficient of determination. |
 | Train time | `train_time_sec` | Wall-clock fit time. |
 | Predict time | `predict_time_sec` | Wall-clock predict time on test set. |
-| Peak memory | `peak_mem_mb` | Max resident memory via `tracemalloc`. |
+| Peak Python allocation | `peak_mem_mb` | Peak memory tracked by Python `tracemalloc`; this excludes native allocator/RSS measurement. |
 | Refresh count | `refresh_count` | Number of discrete refreshes triggered. |
 | Condition proxy | `condition_proxy` | `κ(ΦᵀΦ + λI)` eigenvalue ratio. |
 

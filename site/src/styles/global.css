@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@config "../../tailwind.config.mjs";
+@import "tailwindcss";
 
 @layer base {
   :root {
@@ -15,8 +14,8 @@
   }
 
   html, body {
-    background-color: #0a0a0d;
-    color: #f5f5f7;
+    background-color: #0b1115;
+    color: #f4f1ea;
   }
 
   body {
@@ -25,7 +24,7 @@
   }
 
   ::selection {
-    background-color: rgba(124, 92, 255, 0.35);
+    background-color: rgba(249, 115, 22, 0.35);
     color: #ffffff;
   }
 
@@ -87,14 +86,14 @@
   }
 
   .gradient-text {
-    background: linear-gradient(180deg, #ffffff 0%, #b9b3d8 100%);
+    background: linear-gradient(180deg, #fffdf7 0%, #c9d5d1 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, #b39eff 0%, #7c5cff 50%, #3b82f6 100%);
+    background: linear-gradient(135deg, #fdba74 0%, #f97316 52%, #2dd4bf 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -106,14 +105,14 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition;
-    background: linear-gradient(180deg, #8e6cff 0%, #6a40ff 100%);
+    background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.25) inset,
       0 -1px 0 rgba(0, 0, 0, 0.25) inset,
-      0 12px 30px -10px rgba(124, 92, 255, 0.6);
+      0 12px 30px -10px rgba(249, 115, 22, 0.5);
   }
   .btn-primary:hover {
-    background: linear-gradient(180deg, #9a7cff 0%, #7748ff 100%);
+    background: linear-gradient(135deg, #fdba74 0%, #f97316 100%);
     transform: translateY(-1px);
   }
 
@@ -145,7 +144,16 @@
 
   .chip-dot {
     @apply h-1.5 w-1.5 rounded-full bg-accent-400;
-    box-shadow: 0 0 12px rgba(142, 108, 255, 0.7);
+    box-shadow: 0 0 12px rgba(45, 212, 191, 0.7);
+  }
+
+  .section-kicker {
+    @apply flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.2em] text-ink-400;
+  }
+
+  .section-kicker::before {
+    content: "";
+    @apply h-px w-10 bg-gradient-to-r from-accent-400 to-teal-400;
   }
 
   .reveal {
@@ -175,8 +183,8 @@
       140deg,
       rgba(255, 255, 255, 0.14) 0%,
       rgba(255, 255, 255, 0.04) 40%,
-      rgba(124, 92, 255, 0.4) 80%,
-      rgba(124, 92, 255, 0.7) 100%
+      rgba(249, 115, 22, 0.4) 80%,
+      rgba(249, 115, 22, 0.7) 100%
     );
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
@@ -194,7 +202,7 @@
     position: absolute;
     inset: -6px;
     border-radius: 999px;
-    border: 1px solid rgba(124, 92, 255, 0.6);
+    border: 1px solid rgba(249, 115, 22, 0.6);
     animation: pulseSoft 2.4s ease-in-out infinite;
   }
 }
@@ -207,5 +215,21 @@
   .mask-radial {
     -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
     mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer base {
+  :where(a, button, summary):focus-visible {
+    outline: 2px solid #fdba74;
+    outline-offset: 3px;
   }
 }

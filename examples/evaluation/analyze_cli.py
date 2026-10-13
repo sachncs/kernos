@@ -14,9 +14,6 @@ import argparse
 import csv
 from pathlib import Path
 
-from examples.evaluation.reporting.latex import export_latex_table
-from examples.evaluation.reporting.plots import plot_ablation_bars, plot_pareto_fronts
-
 
 def _parse_csv(path: Path) -> list[dict[str, str]]:
     """Parse ``path`` as a CSV into a list of row dicts."""
@@ -40,6 +37,10 @@ def main() -> None:
         help="Output directory for plots and LaTeX table.",
     )
     args = parser.parse_args()
+
+    # Parse help/argument errors without importing optional plotting stacks.
+    from examples.evaluation.reporting.latex import export_latex_table
+    from examples.evaluation.reporting.plots import plot_ablation_bars, plot_pareto_fronts
 
     results_path = Path(args.results)
     output_dir = Path(args.output_dir)

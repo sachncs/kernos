@@ -16,6 +16,7 @@ class Linear:
     """
 
     def __init__(self, input_dim: int, output_dim: int, rng: np.random.Generator) -> None:
+        """Initialize a seeded linear embedding."""
         scale = np.sqrt(2.0 / max(input_dim, 1))
         self.weights: Array = rng.standard_normal((input_dim, output_dim)) * scale
         self.bias: Array = np.zeros(output_dim, dtype=np.float64)
@@ -28,7 +29,7 @@ class Linear:
         """Return ``(weights, bias)`` for serialization."""
         return self.weights, self.bias
 
-    def setparams(self, weights: Array, bias: Array) -> None:
+    def set_params(self, weights: Array, bias: Array) -> None:
         """Replace ``weights`` and ``bias`` (used by tests)."""
         self.weights = weights
         self.bias = bias

@@ -1,5 +1,7 @@
 ---
 import Logo from "./Logo.astro";
+import { highlight } from "../lib/highlight";
+import { snippets } from "../lib/site-snippets";
 ---
 
 <section class="relative isolate overflow-hidden pt-28 sm:pt-36 lg:pt-44">
@@ -11,11 +13,11 @@ import Logo from "./Logo.astro";
     >
     </div>
     <div
-      class="absolute right-[5%] top-40 h-[420px] w-[420px] rounded-full bg-blue-500/20 blur-[110px] animate-drift-slower"
+      class="absolute right-[5%] top-40 h-[420px] w-[420px] rounded-full bg-teal-400/16 blur-[110px] animate-drift-slower"
     >
     </div>
     <div
-      class="absolute left-[8%] top-72 h-[360px] w-[360px] rounded-full bg-cyan-500/15 blur-[100px] animate-drift-slow"
+      class="absolute left-[8%] top-72 h-[360px] w-[360px] rounded-full bg-ember-500/12 blur-[100px] animate-drift-slow"
     >
     </div>
   </div>
@@ -52,9 +54,13 @@ import Logo from "./Logo.astro";
         class="reveal mx-auto mt-6 max-w-2xl text-balance text-base leading-relaxed text-ink-300 sm:text-lg"
         style="animation-delay:.1s"
       >
-        Kernos is a Python library for <strong class="text-ink-100"
-          >refresh-aware hybrid continuous-discrete low-rank kernel learning</strong
-        >. Continuous parameters learn by gradient descent. Discrete landmarks refresh only when the basis drifts — so you scale to large-batch and streaming regression without rebuilding the world.
+        Train a low-rank kernel regressor on large batches or streaming data
+        without rebuilding its basis at every update. Kernos keeps learning
+        continuously and refreshes landmarks only when they drift.
+        <span class="mt-3 block text-[14px] text-ink-400 sm:text-[15px]">
+          Under the hood: refresh-aware hybrid continuous-discrete kernel learning,
+          exposed through a familiar scikit-learn-style API.
+        </span>
       </p>
 
       <div
@@ -96,7 +102,7 @@ import Logo from "./Logo.astro";
       >
         <div class="flex items-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4 text-accent-300" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
-          scikit-learn compatible
+          scikit-learn-style interface
         </div>
         <div class="flex items-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4 text-accent-300" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
@@ -138,37 +144,21 @@ import Logo from "./Logo.astro";
             <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             quickstart.py
           </div>
-          <div class="flex items-center gap-2 text-[11px] text-ink-500">
-            <span class="hidden sm:inline">python 3.12</span>
+          <div class="flex items-center gap-2 text-[11px] text-ink-400">
+            <span class="hidden sm:inline">python 3.10+</span>
           </div>
         </div>
 
         <div class="grid gap-0 lg:grid-cols-[1fr_280px]">
           <pre
             class="overflow-x-auto px-6 py-6 font-mono text-[13.5px] leading-relaxed text-ink-100 sm:px-8 sm:text-[14px]"
-            set:html={`<code><span style="color:#85858e"># refresh-aware hybrid kernel regression</span>
-<span style="color:#c084fc">import</span> numpy <span style="color:#c084fc">as</span> np
-<span style="color:#c084fc">from</span> kernos <span style="color:#c084fc">import</span> Kernos
-
-rng = np.random.default_rng(<span style="color:#fcd34d">42</span>)
-X_train = rng.standard_normal((<span style="color:#fcd34d">4000</span>, <span style="color:#fcd34d">8</span>))
-y_train = X_train[:, <span style="color:#fcd34d">0</span>] + <span style="color:#fcd34d">0.5</span> * X_train[:, <span style="color:#fcd34d">1</span>] ** <span style="color:#fcd34d">2</span> + <span style="color:#fcd34d">0.1</span> * rng.standard_normal(<span style="color:#fcd34d">4000</span>)
-X_test  = rng.standard_normal((<span style="color:#fcd34d">1000</span>, <span style="color:#fcd34d">8</span>))
-
-model = <span style="color:#7c5cff">Kernos</span>(
-    dim=<span style="color:#fcd34d">64</span>, mbasis=<span style="color:#fcd34d">256</span>, abasis=<span style="color:#fcd34d">32</span>,
-    ridge=<span style="color:#fcd34d">1e-2</span>, steps=<span style="color:#fcd34d">500</span>, seed=<span style="color:#fcd34d">42</span>,
-).fit(X_train, y_train)
-
-<span style="color:#c084fc">print</span>(<span style="color:#86efac">f"R² on held-out: "</span>
-      <span style="color:#86efac">f"</span>{model.score(X_test, y_test):.4f}<span style="color:#86efac">"</span>)
-<span style="color:#85858e"># → R² on held-out: 0.8923</span></code>`}>
+            set:html={`<code>${highlight(snippets.fit)}</code>`}>
           </pre>
 
           <div
             class="hidden border-l border-white/5 bg-white/[0.015] px-6 py-6 lg:block"
           >
-            <div class="text-[11px] uppercase tracking-widest text-ink-500">
+            <div class="text-[11px] uppercase tracking-widest text-ink-400">
               What happens inside
             </div>
             <ul class="mt-4 space-y-3 text-[13px] text-ink-200">
@@ -200,7 +190,7 @@ model = <span style="color:#7c5cff">Kernos</span>(
     id="trust"
   >
     <p
-      class="text-center text-[11px] uppercase tracking-[0.18em] text-ink-500"
+      class="text-center text-[11px] uppercase tracking-[0.18em] text-ink-400"
     >
       Built on the shoulders of
     </p>

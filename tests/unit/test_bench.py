@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kernos.bench.baseline import Nystrom, Random, Ridge
+from kernos.bench.baseline import Baseline, Nystrom, Random, Ridge
 from kernos.bench.dataset import hetero, highdim, linear, poly, split
 from kernos.bench.metric import allmetrics, mae, maxerr, r2, rmse
 from kernos.bench.runner import Report, Runner
@@ -71,6 +71,10 @@ class TestDataset:
 
 
 class TestBaselines:
+    def test_base_class_is_abstract(self) -> None:
+        with pytest.raises(TypeError):
+            Baseline()
+
     def test_ridge(self, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
         m = Ridge(ridge=1e-2)

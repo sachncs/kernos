@@ -6,13 +6,18 @@ Single-word API: ``Gate.value(gatelogit)`` returns the gate ``rho`` and
 
 from __future__ import annotations
 
+import numpy as np
 from scipy.special import expit
+
+from kernos.core.types import check
 
 
 class Gate:
     """Logistic sigmoid gate with a learnable logit."""
 
     def __init__(self, gatelogit: float = 0.0, nofreeze: bool = False) -> None:
+        """Initialize a logistic fusion gate."""
+        check(bool(np.isfinite(gatelogit)), f"gatelogit must be finite, got {gatelogit}")
         self.gatelogit = gatelogit
         self.nofreeze = nofreeze
 

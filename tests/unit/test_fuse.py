@@ -25,8 +25,16 @@ class TestGate:
         _ = g_freeze.value(1.0)
         assert g_freeze.gatelogit == 0.0
 
+    def test_rejects_non_finite_logit(self) -> None:
+        with pytest.raises(ValueError, match="finite"):
+            Gate(gatelogit=float("nan"))
+
 
 class TestScaler:
+    def test_rejects_invalid_epsilon(self) -> None:
+        with pytest.raises(ValueError, match="eps"):
+            Scaler(eps=0.0)
+
     def test_gnorm(self, rng: np.random.Generator) -> None:
         scaler = Scaler()
         phig = rng.standard_normal((100, 8))
@@ -61,3 +69,13 @@ class TestFuse:
         phi = fuse.forward(phig, phil)
         g, l = fuse.split(phi, 8)
         np.testing.assert_allclose(g, phig * np.sqrt(0.5), atol=1e-8)
+
+    def test_rejects_invalid_gate_and_sample_shapes(self, rng: np.random.Generator) -> None:
+        with pytest.raises(ValueError, match=r"in \[0, 1\]"):
+            Fuse(gateval=2.0)
+        with pytest.raises(ValueError, match="same sample count"):
+            Fuse().forward(rng.standard_normal((2, 3)), rng.standard_normal((4, 1)))
+
+    def test_split_rejects_invalid_rank(self) -> None:
+        with pytest.raises(ValueError, match="within"):
+            Fuse().split(np.zeros((2, 3)), 4)

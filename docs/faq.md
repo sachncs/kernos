@@ -23,7 +23,7 @@ Standard Nyström methods rebuild the kernel basis from scratch each time. Kerno
 
 ### What Python versions are supported?
 
-Python 3.10, 3.11, and 3.12 are officially supported and tested in CI.
+Python 3.10 through 3.14 are officially supported and tested in CI.
 
 ### What are the dependencies?
 

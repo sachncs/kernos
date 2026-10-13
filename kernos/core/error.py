@@ -23,8 +23,26 @@ class IllConditionedError(AwarenessError):
 
 
 class BudgetExceeded(AwarenessError):
-    """Raised when a refresh would push the running total above the
-    amortized refresh budget configured on ``Plan.budget``."""
+    """Raised when a refresh exceeds the configured budget.
+
+    The budget is the amortized refresh budget configured on ``Plan.budget``.
+    """
+
+
+class MemoryLimitExceeded(AwarenessError, MemoryError):
+    """Raised when the configured preflight memory budget would be exceeded.
+
+    It remains a ``MemoryError`` for callers that already handle the standard
+    exception, while providing a stable Kernos-specific boundary.
+    """
+
+
+class TrainingCancelled(AwarenessError):
+    """Raised when a cooperative cancellation check stops training."""
+
+
+class TrainingTimeout(TrainingCancelled):
+    """Raised when a cooperative training timeout expires at a safe boundary."""
 
 
 class ShapeError(AwarenessError, ValueError):

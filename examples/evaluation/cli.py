@@ -14,15 +14,6 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import numpy as np
-
-from examples.evaluation.datasets.registry import DATASET_REGISTRY
-from examples.evaluation.models.tiers import TIER_MAP
-from examples.evaluation.reporting.csv_writer import write_results_csv
-from examples.evaluation.reporting.markdown import results_to_markdown, stability_to_markdown
-from examples.evaluation.reporting.result_record import ExperimentResult
-from examples.evaluation.runner.suite import run_experiment_suite
-
 
 def main() -> None:
     """CLI entry point for the evaluation suite."""
@@ -57,6 +48,18 @@ def main() -> None:
         help="Skip ablation runs.",
     )
     args = parser.parse_args()
+
+    # Keep ``kernos-eval --help`` usable from the core wheel. These imports
+    # intentionally remain behind argument parsing because they depend on the
+    # optional ``examples`` stack.
+    import numpy as np
+
+    from examples.evaluation.datasets.registry import DATASET_REGISTRY
+    from examples.evaluation.models.tiers import TIER_MAP
+    from examples.evaluation.reporting.csv_writer import write_results_csv
+    from examples.evaluation.reporting.markdown import results_to_markdown, stability_to_markdown
+    from examples.evaluation.reporting.result_record import ExperimentResult
+    from examples.evaluation.runner.suite import run_experiment_suite
 
     datasets = list(DATASET_REGISTRY.keys()) if args.datasets == ["all"] else args.datasets
     tiers = [TIER_MAP[t] for t in (["Small", "Medium", "Large"] if args.tiers == ["all"] else args.tiers)]

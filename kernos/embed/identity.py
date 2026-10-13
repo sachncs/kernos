@@ -22,6 +22,6 @@ class Identity:
 
         return np.zeros(0), np.zeros(0)
 
-    def setparams(self, theta: Array, bias: Array) -> None:
+    def set_params(self, theta: Array, bias: Array) -> None:
         """No-op for tests."""
         return None

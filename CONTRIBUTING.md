@@ -10,6 +10,7 @@ Thank you for your interest in contributing to Kernos! This document provides gu
 - [Commit Conventions](#commit-conventions)
 - [Pull Request Process](#pull-request-process)
 - [Coding Standards](#coding-standards)
+- [Engineering Principles](docs/engineering-principles.md)
 - [Running Tests](#running-tests)
 - [Documentation](#documentation)
 
@@ -30,6 +31,7 @@ Thank you for your interest in contributing to Kernos! This document provides gu
    pip install -e ".[dev]"
    pre-commit install
    ```
+   For a reproducible locked environment, use `uv sync --locked` instead.
 
 ## Development Setup
 
@@ -109,7 +111,7 @@ chore(deps): bump numpy to >=1.25
 5. **Ensure** all checks pass:
    ```bash
     ruff check .
-    black --check .
+    ruff format --check .
     mypy --strict kernos/
     pytest tests/ -v -p no:asyncio
    ```
@@ -129,8 +131,8 @@ chore(deps): bump numpy to >=1.25
 
 ### Python Style
 
-- Follow [PEP 8](https://peps.python.org/pep-0008/) enforced by `ruff` and `black`.
-- Line length: 88 characters (enforced by `black`).
+- Follow [PEP 8](https://peps.python.org/pep-0008/) enforced by Ruff.
+- Line length: 110 characters (the repository Ruff configuration is authoritative).
 - Use type hints for all public functions.
 - Use Google-style docstrings.
 
@@ -164,12 +166,22 @@ def function_name(param1: type, param2: type) -> return_type:
 
 ### Architecture Principles
 
-- **Immutability**: Use frozen dataclasses with `replace` methods for state.
-- **Duck typing**: Define interfaces by `forward` / `run` / `solve` method shape rather than `typing.Protocol`.
-- **Numerical stability**: Always check conditioning and use jitter fallbacks.
-- **Modularity**: Keep modules decoupled; prefer composition over inheritance.
+The complete engineering contract is in
+[`docs/engineering-principles.md`](docs/engineering-principles.md). In short:
+
+- Use typed protocols for interchangeable components and depend on the smallest
+  useful interface.
+- Keep configuration and training snapshots immutable at their boundaries.
+- Validate inputs before numerical work and prefer solves/factorizations over
+  explicit inverses.
+- Keep fitted attributes synchronized with the authoritative bundle.
+- Add a regression test for every bug fix and keep public examples executable.
 
 ## Running Tests
+
+The repository-level `Makefile` provides the canonical local command surface.
+Run `make help` to list the targets; `make verify` runs the Python, clean-wheel,
+and site quality gates used for production-readiness checks.
 
 ```bash
 # Full test suite
@@ -201,10 +213,10 @@ ruff check .
 ruff check --fix .
 
 # Format
-black .
+ruff format .
 
 # Check formatting
-black --check .
+ruff format --check .
 
 # Type check
 mypy --strict kernos/

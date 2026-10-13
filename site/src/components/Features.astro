@@ -6,8 +6,8 @@ const features = [
     icon: "refresh",
   },
   {
-    title: "Drop-in for scikit-learn",
-    body: "A familiar `fit` / `predict` / `score` surface. Plays well with `GridSearchCV`, `Pipeline`, and the rest of the sklearn ecosystem.",
+    title: "Scikit-learn-style interface",
+    body: "A familiar `fit` / `predict` / `score` surface that integrates with `GridSearchCV` and `Pipeline` when the configured basis and validation capacity fit the dataset.",
     icon: "puzzle",
   },
   {
@@ -35,18 +35,15 @@ const features = [
 
 <section id="features" class="relative py-28 sm:py-36">
   <div class="container-page">
-    <div class="mx-auto max-w-3xl text-center">
-      <span class="chip reveal">
-        <span class="chip-dot"></span>
-        Features
-      </span>
+    <div class="max-w-4xl">
+      <span class="section-kicker reveal">Capabilities</span>
       <h2
-        class="reveal mt-5 font-display text-3xl font-semibold tracking-tight gradient-text sm:text-5xl"
+        class="reveal mt-5 max-w-3xl font-display text-3xl font-semibold tracking-tight text-ink-50 sm:text-5xl"
       >
         Kernel learning, without the rebuild.
       </h2>
       <p
-        class="reveal mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-ink-300"
+        class="reveal mt-5 max-w-2xl text-balance text-base leading-relaxed text-ink-300"
       >
         Every piece of Kernos is engineered for one thing: an adaptive, low-rank
         kernel that learns continuously and refreshes only when it has to.

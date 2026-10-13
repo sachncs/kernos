@@ -64,9 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/architecture.md` and `docs/design.md` aligned with the actual
   public surface: `Continuous`/`Discrete`/`Bundle` (not the
   non-existent `ContinuousState`/`DiscreteState`/`FullState`),
-  `dataclasses.replace` (not the fictional `copy_with`), duck-typed
-  interfaces (not `typing.Protocol`), and the real `stab_*` fields on
-  `Plan` (not the non-existent `NumericsConfig`)
+  `dataclasses.replace` (not the fictional `copy_with`), structural
+  `typing.Protocol` interfaces and the real `stab_*` fields on `Plan` (not the
+  non-existent `NumericsConfig`)
 - `docs/faq.md` parameter names corrected from pre-rebrand names
   (`memory_mode`, `lambda_reg`, `max_steps`, `m_g`, `m_l`, `embedding_dim`,
   `delta_hi`, `t_cool`, `disable_*`) to the current `mode`, `ridge`,

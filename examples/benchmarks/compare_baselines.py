@@ -23,6 +23,7 @@ class _FitPredict(Protocol):
     """Minimal protocol for estimators used in this benchmark."""
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> _FitPredict: ...
+
     def predict(self, X: np.ndarray) -> np.ndarray: ...
 
 

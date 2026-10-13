@@ -25,3 +25,11 @@ class TestPredict:
         out = p.variance(np.eye(4))
         assert out.shape == (4,)
         assert (out >= 0).all()
+
+    def test_rejects_feature_width_mismatch(self, predict: Predict) -> None:
+        with pytest.raises(ShapeError, match="expected 4"):
+            predict.forward(np.ones((2, 3)))
+
+    def test_rejects_invalid_covariance(self) -> None:
+        with pytest.raises(ShapeError, match="matching weights"):
+            Predict(weights=np.ones(3), Sinv=np.eye(2))

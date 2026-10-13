@@ -10,6 +10,7 @@ class Budget:
     """Tracks cumulative refresh cost against a fixed total budget."""
 
     def __init__(self, total: float) -> None:
+        """Initialize a positive total refresh budget."""
         check(total > 0, f"total must be positive, got {total}")
         self.total = float(total)
         self.spent = 0.0

@@ -23,6 +23,7 @@ class Runner:
     """Run one or many experiments and aggregate metrics."""
 
     def __init__(self, seed: int | None = None) -> None:
+        """Initialize a reproducible benchmark runner."""
         self.seed = seed
 
     def run(

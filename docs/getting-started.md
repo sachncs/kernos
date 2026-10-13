@@ -21,6 +21,7 @@ pip install -e ".[dev]"
 
 ```python
 import kernos
+
 print(kernos.__version__)
 ```
 

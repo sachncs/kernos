@@ -10,7 +10,7 @@ const params = [
     label: "Discrete Z, A, M_g, c_g, c_l, ρ",
     where: "on drift",
     what: "Refreshed only when basis drift exceeds a learned threshold.",
-    color: "blue",
+    color: "teal",
   },
 ];
 
@@ -45,18 +45,15 @@ const stages = [
 
 <section id="architecture" class="relative py-28 sm:py-36">
   <div class="container-page">
-    <div class="mx-auto max-w-3xl text-center">
-      <span class="chip reveal">
-        <span class="chip-dot"></span>
-        Architecture
-      </span>
+    <div class="max-w-4xl">
+      <span class="section-kicker reveal">System map</span>
       <h2
-        class="reveal mt-5 font-display text-3xl font-semibold tracking-tight gradient-text sm:text-5xl"
+        class="reveal mt-5 max-w-3xl font-display text-3xl font-semibold tracking-tight text-ink-50 sm:text-5xl"
       >
         Two parameter groups, one disciplined loop.
       </h2>
       <p
-        class="reveal mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-ink-300"
+        class="reveal mt-5 max-w-2xl text-balance text-base leading-relaxed text-ink-300"
       >
         Kernos splits every parameter into a continuously-learned group and a
         discretely-refreshed group. The expensive refresh fires only when the
@@ -67,7 +64,7 @@ const stages = [
     <div class="reveal mt-14 overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-b from-white/[0.025] to-transparent">
       <div class="grid gap-0 lg:grid-cols-[1.1fr_1fr]">
         <div class="p-6 sm:p-10">
-          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-500">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-400">
             The hybrid loop
           </div>
           <h3 class="mt-3 font-display text-xl font-semibold tracking-tight text-ink-50">
@@ -88,7 +85,7 @@ const stages = [
                     class={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-[11px] font-mono ${
                       p.color === "accent"
                         ? "border-accent-500/30 bg-accent-500/10 text-accent-200"
-                        : "border-blue-500/30 bg-blue-500/10 text-blue-200"
+                        : "border-teal-400/30 bg-teal-400/10 text-teal-300"
                     }`}
                   >
                     {p.color === "accent" ? "∂" : "Δ"}
@@ -113,26 +110,26 @@ const stages = [
 
           <div class="mt-8 grid grid-cols-2 gap-3 text-[12px] text-ink-300 sm:grid-cols-4">
             <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-              <div class="text-ink-500">Drift</div>
+              <div class="text-ink-400">Drift</div>
               <div class="mt-1 font-mono text-ink-100">frobenius · spectral</div>
             </div>
             <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-              <div class="text-ink-500">Trigger</div>
+              <div class="text-ink-400">Trigger</div>
               <div class="mt-1 font-mono text-ink-100">d_t &gt; drift_hi</div>
             </div>
             <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-              <div class="text-ink-500">Cooldown</div>
+              <div class="text-ink-400">Cooldown</div>
               <div class="mt-1 font-mono text-ink-100">cool = 50</div>
             </div>
             <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-              <div class="text-ink-500">Budget</div>
+              <div class="text-ink-400">Budget</div>
               <div class="mt-1 font-mono text-ink-100">amortized</div>
             </div>
           </div>
         </div>
 
         <div class="relative border-t border-white/[0.06] bg-gradient-to-b from-white/[0.04] to-transparent p-6 sm:p-10 lg:border-l lg:border-t-0">
-          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-500">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-400">
             Pipeline
           </div>
           <h3 class="mt-3 font-display text-xl font-semibold tracking-tight text-ink-50">
@@ -141,7 +138,7 @@ const stages = [
 
           <ol class="relative mt-6 space-y-3">
             <span
-              class="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-accent-500/40 via-white/10 to-blue-500/40"
+              class="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-accent-500/40 via-white/10 to-teal-400/40"
               aria-hidden="true"
             ></span>
             {
@@ -173,7 +170,7 @@ const stages = [
 
     <div class="reveal mt-12 grid gap-4 sm:grid-cols-3">
       <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-        <div class="font-mono text-[12px] text-ink-500">rank(K) ≤</div>
+        <div class="font-mono text-[12px] text-ink-400">rank(K) ≤</div>
         <div class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-50">
           r_g + m_l
         </div>
@@ -183,7 +180,7 @@ const stages = [
         </p>
       </div>
       <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-        <div class="font-mono text-[12px] text-ink-500">kernel PSD</div>
+        <div class="font-mono text-[12px] text-ink-400">kernel PSD</div>
         <div class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-50">
           K = ΦΦᵀ
         </div>
@@ -193,7 +190,7 @@ const stages = [
         </p>
       </div>
       <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-        <div class="font-mono text-[12px] text-ink-500">orthogonality</div>
+        <div class="font-mono text-[12px] text-ink-400">orthogonality</div>
         <div class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-50">
           Φ_gᵀ Φ_l ≈ 0
         </div>

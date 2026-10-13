@@ -20,7 +20,7 @@ class TestLinear:
     def test_params_roundtrip(self, rng: np.random.Generator) -> None:
         e = Linear(4, 4, rng)
         weights, bias = e.params()
-        e.setparams(weights * 2.0, bias + 1.0)
+        e.set_params(weights * 2.0, bias + 1.0)
         out = e.forward(np.eye(4))
         assert out.shape == (4, 4)
 

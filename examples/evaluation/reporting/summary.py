@@ -44,9 +44,7 @@ def _load_rows(csv_path: Path) -> list[dict[str, str]]:
 
 def _headline(rows: list[dict[str, str]]) -> list[str]:
     """Build the headline metrics markdown block."""
-    kernos_rmses = np.array(
-        [_parse_mean(r["rmse"]) for r in rows if r["model"] == "Kernos"]
-    )
+    kernos_rmses = np.array([_parse_mean(r["rmse"]) for r in rows if r["model"] == "Kernos"])
     if kernos_rmses.size == 0:
         return ["_No Kernos rows in CSV; cannot compute headline._", ""]
     kernos_mean = float(kernos_rmses.mean())
@@ -70,16 +68,8 @@ def _headline(rows: list[dict[str, str]]) -> list[str]:
             sum(
                 1
                 for ds in {r["dataset"] for r in rows if r["model"] == "Kernos"}
-                if min(
-                    _parse_mean(r["rmse"])
-                    for r in rows
-                    if r["dataset"] == ds and r["model"] == "Kernos"
-                )
-                < min(
-                    _parse_mean(r["rmse"])
-                    for r in rows
-                    if r["dataset"] == ds and r["model"] == name
-                )
+                if min(_parse_mean(r["rmse"]) for r in rows if r["dataset"] == ds and r["model"] == "Kernos")
+                < min(_parse_mean(r["rmse"]) for r in rows if r["dataset"] == ds and r["model"] == name)
             )
         )
         win_rates[name] = wins
@@ -112,22 +102,13 @@ def _per_dataset_ranking(rows: list[dict[str, str]]) -> list[str]:
         "|---|---|---|---|",
     ]
     for ds in datasets:
-        per_model = [
-            (r["model"], _parse_mean(r["rmse"]))
-            for r in rows
-            if r["dataset"] == ds
-        ]
+        per_model = [(r["model"], _parse_mean(r["rmse"])) for r in rows if r["dataset"] == ds]
         per_model.sort(key=lambda kv: kv[1])
         if not per_model:
             continue
         models_in_order = [m for m, _ in per_model]
-        kernos_rank = (
-            models_in_order.index("Kernos") + 1 if "Kernos" in models_in_order else 0
-        )
-        lines.append(
-            f"| {ds} | {kernos_rank} / {len(per_model)} | "
-            f"{per_model[0][0]} | {per_model[-1][0]} |"
-        )
+        kernos_rank = models_in_order.index("Kernos") + 1 if "Kernos" in models_in_order else 0
+        lines.append(f"| {ds} | {kernos_rank} / {len(per_model)} | {per_model[0][0]} | {per_model[-1][0]} |")
     lines.append("")
     return lines
 
@@ -174,8 +155,7 @@ def build_summary(csv_path: Path) -> str:
     parts: list[str] = [
         "# Kernos evaluation summary",
         "",
-        f"> Sweep over {len(datasets)} dataset(s) × tier(s) "
-        f"{', '.join(tiers)}.",
+        f"> Sweep over {len(datasets)} dataset(s) × tier(s) {', '.join(tiers)}.",
         "",
         "## Headline",
         "",
@@ -200,13 +180,9 @@ def write_summary(csv_path: Path, output_dir: Path) -> Path:
 
 def main() -> None:
     """CLI entry point for ``python -m examples.evaluation.reporting.summary``."""
-    parser = argparse.ArgumentParser(
-        description="Compute and write summary.md from results.csv."
-    )
+    parser = argparse.ArgumentParser(description="Compute and write summary.md from results.csv.")
     parser.add_argument("--results", type=str, required=True, help="Path to results.csv.")
-    parser.add_argument(
-        "--output_dir", type=str, default="results", help="Output directory."
-    )
+    parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
     args = parser.parse_args()
 
     csv_path = Path(args.results)

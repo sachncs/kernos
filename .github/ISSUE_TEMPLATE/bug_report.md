@@ -37,7 +37,7 @@ from kernos import Kernos
 
 - OS: [e.g., macOS 14.0, Ubuntu 22.04]
 - Python version: [e.g., 3.11.5]
-- kernos version: [e.g., 0.1.0]
+- kernos version: [e.g., 0.2.0]
 - NumPy version: [e.g., 1.24.0]
 - SciPy version: [e.g., 1.10.0]
 - scikit-learn version: [e.g., 1.3.0]

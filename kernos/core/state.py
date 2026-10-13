@@ -17,7 +17,18 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+import numpy as np
+
 from kernos.core.types import Array
+
+
+def _owned_readonly(value: Array | None) -> Array | None:
+    """Copy an array at a snapshot boundary and make the copy read-only."""
+    if value is None:
+        return None
+    owned = np.array(value, dtype=np.float64, copy=True)
+    owned.setflags(write=False)
+    return owned
 
 
 @dataclass(frozen=True)
@@ -31,6 +42,10 @@ class Continuous:
 
     theta: Any = None
     R: Array | None = None
+
+    def __post_init__(self) -> None:
+        """Own and freeze the projection matrix stored in this snapshot."""
+        object.__setattr__(self, "R", _owned_readonly(self.R))
 
 
 @dataclass(frozen=True)
@@ -63,6 +78,11 @@ class Discrete:
     gateval: float = 0.5
     gatelogit: float = 0.0
 
+    def __post_init__(self) -> None:
+        """Own and freeze all array-backed discrete state."""
+        for name in ("landmarks", "anchors", "whitening", "basis_wz", "denoms"):
+            object.__setattr__(self, name, _owned_readonly(getattr(self, name)))
+
 
 @dataclass(frozen=True)
 class Bundle:
@@ -79,6 +99,10 @@ class Bundle:
     discrete: Discrete = field(default_factory=Discrete)
     step: int = 0
     weights: Array | None = None
+
+    def __post_init__(self) -> None:
+        """Own and freeze the solved coefficient vector."""
+        object.__setattr__(self, "weights", _owned_readonly(self.weights))
 
     def replace(self, **kwargs: Any) -> Bundle:
         """Return a new ``Bundle`` with the given fields overridden."""

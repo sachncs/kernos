@@ -5,6 +5,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from kernos.core.composition import build_loop_components
+from kernos.core.diagnostics import RecoveryOutcome, SolverStage
+from kernos.core.error import IllConditionedError
+from kernos.core.plan import Plan
 from kernos.loop.callback import Log, Profile, Snapshot
 from kernos.loop.loop import Loop
 from kernos.loop.loss import div, orth, outer, ridge
@@ -61,6 +65,13 @@ class TestOuterstep:
 
 
 class TestLoop:
+    def test_accepts_injected_component_graph(self, small_plan: Plan) -> None:
+        components = build_loop_components(small_plan)
+        loop = Loop(small_plan, components=components)
+        assert loop._solver is components.solver
+        assert loop._refresh_pipe is components.refresh_pipe
+        assert loop._outerstep is components.outerstep
+
     def test_initialize(self, small_loop: Loop, synthetic: tuple[np.ndarray, np.ndarray]) -> None:
         X, y = synthetic
         bundle = small_loop.initialize(X, y)
@@ -83,6 +94,32 @@ class TestLoop:
         y_train, y_val = y[:-n_val], y[-n_val:]
         bundle = small_loop.step(bundle, X_train, y_train, X_val=X_val, y_val=y_val)
         assert bundle.step == 1
+
+    def test_failed_solver_publishes_recovery_before_reraising(
+        self, small_plan: Plan, synthetic: tuple[np.ndarray, np.ndarray]
+    ) -> None:
+        """A solver exception leaves an inspectable failed-stage record."""
+        components = build_loop_components(small_plan)
+
+        class FailingSolver:
+            last_info = 0
+            last_iterations = 0
+            last_solver_event = None
+            last_jitter = None
+            last_condition = 123.0
+            last_attempts = 0
+
+            def solve(self, phi: np.ndarray, y: np.ndarray) -> np.ndarray:
+                raise IllConditionedError("forced test failure")
+
+        components.solver = FailingSolver()  # type: ignore[assignment]
+        loop = Loop(small_plan, components=components)
+        with pytest.raises(IllConditionedError, match="forced test failure"):
+            loop.initialize(*synthetic)
+        recovery = loop.diagnostics.last_solver_recovery
+        assert recovery is not None
+        assert recovery.stage == SolverStage.INITIALIZE
+        assert recovery.outcome == RecoveryOutcome.FAILED
 
 
 class TestCallbacks:

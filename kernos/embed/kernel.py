@@ -16,6 +16,7 @@ class Kernel:
     """
 
     def __init__(self, centers: Array, gamma: float = 1.0) -> None:
+        """Initialize an RBF kernel embedder."""
         self.centers: Array = centers
         self.gamma: float = gamma
 

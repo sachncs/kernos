@@ -1,18 +1,29 @@
 {
   "name": "kernos-site",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "test": "node scripts/test-highlight.mjs",
+    "test:accessibility": "node scripts/test-accessibility.mjs",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:browser:engine": "BROWSER=firefox node scripts/test-browser.mjs",
+    "test:live": "node scripts/test-live.mjs",
+    "test:visual": "node scripts/test-visual.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^4.16.18",
-    "@astrojs/tailwind": "^5.1.4",
-    "tailwindcss": "^3.4.17"
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.8",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0"
   }
 }

@@ -76,3 +76,12 @@ class TestPolicy:
         bundle = Bundle(step=5)
         policy = Policy(plan, drift_value=10.0)
         assert not policy.decide(bundle, gain=1.0)
+
+    def test_transition_preserves_immutable_snapshots(self) -> None:
+        bundle = Bundle(step=7)
+        policy = Policy(Plan(), drift_value=0.0)
+        transitioned = policy.transition(bundle)
+
+        assert bundle.discrete.tlast == 0
+        assert transitioned.discrete.tlast == 7
+        assert transitioned.discrete is not bundle.discrete

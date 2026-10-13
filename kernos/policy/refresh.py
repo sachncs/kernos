@@ -9,20 +9,15 @@ from __future__ import annotations
 
 import numpy as np
 
-from kernos.basis.greedy import Greedy
-from kernos.basis.nystrom import Nystrom
 from kernos.basis.whitening import Whitening
-from kernos.cache import Adaptive, Cache, Full, Stream
-from kernos.core.plan import Buffer, Plan
+from kernos.core.interfaces import Basis, ResidualSolver
+from kernos.core.plan import Plan
 from kernos.core.state import Bundle, Discrete
 from kernos.correct.rbf import Rbf
 from kernos.correct.sampler import Sampler
 from kernos.fuse.fuse import Fuse
 from kernos.fuse.scaler import Scaler
 from kernos.sample import kmeanspp
-from kernos.solver.direct import Direct
-from kernos.solver.iterative import Iterative
-from kernos.solver.woodbury import Woodbury
 
 
 class Refresh:
@@ -36,15 +31,16 @@ class Refresh:
         sampler: Sampler,
         rbf: Rbf,
         fuse: Fuse,
-        solver: Direct | Iterative | Woodbury,
+        solver: ResidualSolver,
     ) -> None:
-        self.plan = plan
-        self.whitening = whitening
-        self.scaler = scaler
-        self.sampler = sampler
-        self.rbf = rbf
-        self.fuse = fuse
-        self.solver = solver
+        """Initialize the discrete refresh pipeline dependencies."""
+        self._plan = plan
+        self._whitening = whitening
+        self._scaler = scaler
+        self._sampler = sampler
+        self._rbf = rbf
+        self._fuse = fuse
+        self._solver = solver
 
     def run(self, bundle: Bundle, U: np.ndarray, y: np.ndarray, rng: np.random.Generator) -> Discrete:
         """Rebuild ``Discrete`` from projected embeddings ``U``.
@@ -54,23 +50,28 @@ class Refresh:
         ``plan.mode`` so the cache actually affects how the fused
         features are aggregated before solving.
         """
+        # Import lazily to avoid a cycle while the core factory registers
+        # policy drift implementations during package initialization.
+        from kernos.core.factory import build_basis, build_cache
+
         samples = U.shape[0]
-        basis, basis_wz = self._build_basis(U, rng)
+        basis = build_basis(self._plan.basis, U, self._plan, self._whitening, rng)
+        basis_wz = getattr(basis, "Wz", None)
         landmarks = basis.landmarks
         whitening: np.ndarray | None = getattr(basis, "whitening", None)
-        anchors = self._anchors(U, basis, y, rng) if self.plan.abasis > 0 else np.zeros((0, U.shape[1]))
-        phil = self.rbf.forward(U, anchors) if anchors.size > 0 else np.zeros((samples, 0))
-        denoms = self.rbf.norm(phil) if phil.size > 0 else np.zeros(0)
+        anchors = self._anchors(U, basis, y, rng) if self._plan.abasis > 0 else np.zeros((0, U.shape[1]))
+        phil = self._rbf.forward(U, anchors) if anchors.size > 0 else np.zeros((samples, 0))
+        denoms = self._rbf.norm(phil) if phil.size > 0 else np.zeros(0)
         phig = basis.forward(U)
-        cglobal = self.scaler.gnorm(phig)
-        clocal = self.scaler.lnorm(phil) if phil.size > 0 else 1.0
-        fused = self.fuse.forward(phig, phil, cglobal=cglobal, clocal=clocal, gateval=0.5)
+        cglobal = self._scaler.gnorm(phig)
+        clocal = self._scaler.lnorm(phil) if phil.size > 0 else 1.0
+        fused = self._fuse.forward(phig, phil, cglobal=cglobal, clocal=clocal, gateval=0.5)
         mfeat = fused.shape[1]
-        cache = self._build_cache(mfeat)
+        cache = build_cache(self._plan.mode, mfeat, threshold=2 * mfeat)
         cache.accumulate(fused, y)
         _S, _b = cache.equations()
-        self.solver.solve(fused, y)
-        gateval = self.fuse.gateval
+        self._solver.solve(fused, y)
+        gateval = self._fuse.gateval
         return Discrete(
             landmarks=landmarks,
             anchors=anchors if anchors.size > 0 else None,
@@ -82,40 +83,16 @@ class Refresh:
             tlast=bundle.step,
             active=1,
             gateval=gateval,
-            gatelogit=self.fuse.gatelogit,
+            gatelogit=self._fuse.gatelogit,
         )
 
-    def _build_basis(
-        self, U: np.ndarray, rng: np.random.Generator
-    ) -> tuple[Nystrom | Greedy, np.ndarray | None]:
-        """Select a basis factory based on ``plan.basis``.
-
-        Returns ``(basis, basis_wz)``.  ``basis_wz`` is populated only
-        for the Greedy basis.
-        """
-        if self.plan.basis == "greedy":
-            g = Greedy.fromdata(U, self.plan.mbasis, rng)
-            return g, g.Wz
-        n = Nystrom.fromdata(U, self.plan.mbasis, self.whitening, rng)
-        return n, None
-
-    def _build_cache(self, mfeat: int) -> Cache:
-        """Select a normal-equation accumulator based on ``plan.mode``."""
-        if self.plan.mode == Buffer.STREAM:
-            return Stream(mfeat=mfeat)
-        if self.plan.mode == Buffer.ADAPTIVE:
-            return Adaptive(mfeat=mfeat, threshold=2 * mfeat)
-        return Full()
-
-    def _anchors(
-        self, U: np.ndarray, basis: Nystrom | Greedy, y: np.ndarray, rng: np.random.Generator
-    ) -> np.ndarray:
+    def _anchors(self, U: np.ndarray, basis: Basis, y: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Select anchors via the residual-aware Sampler."""
-        if self.plan.noresid:
-            indices = kmeanspp(U, self.plan.abasis, rng)
+        if self._plan.noresid:
+            indices = kmeanspp(U, self._plan.abasis, rng)
             return U[indices]
         phig = basis.forward(U)
-        residuals = self.solver.residual(phig, y)
+        residuals = self._solver.residual(phig, y)
         distances = np.sqrt(np.sum((U[:, None, :] - basis.landmarks[None, :, :]) ** 2, axis=-1))
-        indices = self.sampler.pick(U, distances, residuals, self.plan.abasis, rng, noresid=False)
+        indices = self._sampler.pick(U, distances, residuals, self._plan.abasis, rng, noresid=False)
         return U[indices]

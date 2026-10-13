@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from kernos.core.plan import Plan
 from kernos.core.state import Bundle
 
@@ -10,8 +12,9 @@ class Policy:
     """Five-condition refresh controller."""
 
     def __init__(self, plan: Plan, drift_value: float) -> None:
-        self.plan = plan
-        self.drift = drift_value
+        """Initialize a refresh decision from plan thresholds and drift."""
+        self._plan = plan
+        self._drift = drift_value
 
     def decide(self, bundle: Bundle, gain: float) -> bool:
         """Return ``True`` iff all five conditions are met.
@@ -23,21 +26,19 @@ class Policy:
           4. ``active == 1`` (or ``nohyst`` flag forces it on)
           5. ``gain > gain * rcost``
         """
-        if self.plan.noref:
+        if self._plan.noref:
             return False
-        if self.drift <= self.plan.drift_hi:
+        if self._drift <= self._plan.drift_hi:
             return False
-        if bundle.step - bundle.discrete.tlast < (0 if self.plan.nocool else self.plan.cool):
+        if bundle.step - bundle.discrete.tlast < (0 if self._plan.nocool else self._plan.refresh_cooldown):
             return False
-        if bundle.step < self.plan.warm:
+        if bundle.step < self._plan.refresh_warmup:
             return False
-        active = 1 if self.plan.nohyst else bundle.discrete.active
+        active = 1 if self._plan.nohyst else bundle.discrete.active
         if active != 1:
             return False
-        return gain > self.plan.gain * self.plan.rcost
+        return gain > self._plan.refresh_gain_threshold * self._plan.refresh_cost
 
     def transition(self, bundle: Bundle) -> Bundle:
         """Update ``tlast`` to current step on refresh."""
-        new_disc = bundle.discrete
-        object.__setattr__(new_disc, "tlast", bundle.step)
-        return bundle.replace(discrete=new_disc)
+        return bundle.replace(discrete=replace(bundle.discrete, tlast=bundle.step))

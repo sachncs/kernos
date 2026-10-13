@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from kernos.cache import Adaptive, Full, Stream
 
@@ -36,6 +37,12 @@ class TestStream:
         stream_cache.accumulate(rng.standard_normal((5, 8)), rng.standard_normal(5))
         assert stream_cache.count == 5
 
+    def test_rejects_invalid_batches(self, stream_cache: Stream) -> None:
+        with pytest.raises(ValueError, match="finite"):
+            stream_cache.accumulate(np.full((2, 8), np.nan), np.ones(2))
+        with pytest.raises(ValueError, match="feature width"):
+            stream_cache.accumulate(np.ones((2, 7)), np.ones(2))
+
 
 class TestAdaptive:
     def test_parity_full(self, adaptive_cache: Adaptive, rng: np.random.Generator) -> None:
@@ -50,3 +57,9 @@ class TestAdaptive:
         cache = Adaptive(mfeat=8, threshold=5)
         cache.accumulate(rng.standard_normal((10, 8)), rng.standard_normal(10))
         assert isinstance(cache.primary, Stream)
+
+    def test_rejects_invalid_configuration(self) -> None:
+        with pytest.raises(ValueError, match="mfeat"):
+            Adaptive(mfeat=0)
+        with pytest.raises(ValueError, match="threshold"):
+            Adaptive(mfeat=2, threshold=0)

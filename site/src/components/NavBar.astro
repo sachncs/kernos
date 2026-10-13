@@ -61,6 +61,20 @@ const homeHref = withBase("/");
         <a href="#install" class="btn-primary !px-4 !py-2 text-[13px]">
           Get started
         </a>
+        <details class="relative md:hidden">
+          <summary class="btn-icon list-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-300" aria-label="Open navigation menu">
+            <span class="sr-only">Open navigation menu</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </summary>
+          <nav class="absolute right-0 top-12 w-52 rounded-2xl border border-white/10 bg-ink-900/95 p-2 shadow-card backdrop-blur-xl" aria-label="Mobile navigation">
+            {links.map((l) => (
+              <a href={l.href} class="block rounded-xl px-3 py-2.5 text-sm text-ink-200 hover:bg-white/10 hover:text-white">{l.label}</a>
+            ))}
+            <a href={github} class="mt-1 block rounded-xl px-3 py-2.5 text-sm text-ink-200 hover:bg-white/10 hover:text-white">GitHub</a>
+          </nav>
+        </details>
       </div>
     </div>
   </div>

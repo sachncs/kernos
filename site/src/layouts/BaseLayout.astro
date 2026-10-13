@@ -11,7 +11,7 @@ export interface Props {
 
 const {
   title = "Kernos — Refresh-aware hybrid kernel learning for scalable regression",
-  description = "A Python library that learns adaptive low-rank kernels for regression. Refresh the basis only when it drifts. Drop-in for scikit-learn.",
+  description = "A Python library that learns adaptive low-rank kernels for regression. Refresh the basis only when it drifts. Built around a familiar scikit-learn-style interface.",
   image = "/og.svg",
   canonical,
 } = Astro.props;
@@ -47,13 +47,6 @@ const fullImage = `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
     <link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
     <link rel="apple-touch-icon" href={withBase("/logo-mark.svg")} />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    />
-
     <script is:inline>
       document.documentElement.classList.add("js");
     </script>
@@ -63,7 +56,6 @@ const fullImage = `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
       "@type": "SoftwareApplication",
       "name": "Kernos",
       "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Linux, macOS, Windows",
       "description": description,
       "url": siteUrl,
       "downloadUrl": "https://pypi.org/project/kernos/",
@@ -76,6 +68,7 @@ const fullImage = `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
     })} />
   </head>
   <body class="bg-ink-950 text-ink-50 antialiased selection:bg-accent-500/30">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <slot />
   </body>
 </html>
@@ -83,5 +76,23 @@ const fullImage = `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
 <style is:global>
   html {
     scrollbar-gutter: stable;
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: -4rem;
+    z-index: 100;
+    border-radius: 0.75rem;
+    background: #f0a15f;
+    color: #0b1115;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: top 160ms ease;
+  }
+
+  .skip-link:focus-visible {
+    top: 1rem;
   }
 </style>

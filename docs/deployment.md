@@ -8,14 +8,14 @@ This document covers how to build, test, and publish kernos.
 # Clone and install
 git clone https://github.com/sachncs/kernos.git
 cd kernos
-pip install -e ".[dev]"
+uv sync --locked
 
 # Run tests
 pytest tests/ -v -p no:asyncio
 
 # Run linters
 ruff check .
-black --check .
+ruff format --check .
 mypy --strict kernos/
 ```
 
@@ -36,8 +36,8 @@ This creates:
 
 ```
 dist/
-├── kernos-0.1.0-py3-none-any.whl
-└── kernos-0.1.0.tar.gz
+├── kernos-0.2.0-py3-none-any.whl
+└── kernos-0.2.0.tar.gz
 ```
 
 ## Publishing to PyPI
@@ -54,36 +54,25 @@ pip install --index-url https://test.pypi.org/simple/ kernos
 
 ### Production PyPI
 
-```bash
-# Upload to PyPI
-twine upload dist/*
-```
-
-### Authentication
-
-Use a PyPI API token:
-
-```bash
-# Set up ~/.pypirc or use environment variable
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD=pypi-your-api-token-here
-```
+Production publishing is performed by the tag-controlled trusted-publishing
+workflow described below. Do not upload production artifacts manually from a
+developer workstation.
 
 ## Release Checklist
 
-1. Update version in:
-   - `kernos/_version.py`
-   - `pyproject.toml`
+1. Update the canonical version in `kernos/_version.py` only.
+   Run `python scripts/check-version.py` to verify package and site metadata.
 2. Update `CHANGELOG.md` with release date
 3. Create a git tag:
    ```bash
-   git tag -a v0.1.0 -m "Release 0.1.0"
-   git push origin v0.1.0
+   git tag -a vX.Y.Z -m "Release X.Y.Z"
+   git push origin vX.Y.Z
    ```
-4. Build and upload to Test PyPI
-5. Verify test installation
-6. Upload to production PyPI
-7. Create a GitHub Release with release notes
+4. Optionally build and upload to Test PyPI
+5. Verify the test installation
+6. Configure the `pypi` environment and trusted publisher
+7. Push the reviewed `vX.Y.Z` tag to publish production artifacts
+8. Create a GitHub Release with release notes
 
 ## Versioning
 
@@ -93,32 +82,24 @@ This project follows [Semantic Versioning](https://semver.org/):
 - **MINOR**: New functionality in a backwards-compatible manner
 - **PATCH**: Backwards-compatible bug fixes
 
-The version is tracked in `kernos/_version.py` and referenced by `pyproject.toml`.
+The version is tracked canonically in `kernos/_version.py`; setuptools reads it
+from there and `scripts/check-version.py` guards the site/package metadata.
 
-## Continuous Publishing
+## GitHub Pages
 
-To automate releases via GitHub Actions, add a release workflow:
+Pushes to `master` or `main` trigger `.github/workflows/pages.yml`. The workflow
+installs the locked site dependencies, runs the syntax/accessibility/content
+smoke tests, builds the static site, deploys it, and fetches the public URL to
+reject stale claims or artifacts. Use `workflow_dispatch` to redeploy without
+creating a code change.
 
-```yaml
-name: Release
+## Continuous PyPI Publishing
 
-on:
-  push:
-    tags:
-      - "v*"
+Releases are tag-controlled and use PyPI trusted publishing through
+`.github/workflows/release.yml`. Configure the repository's `pypi` environment
+and PyPI trusted publisher before creating a `vX.Y.Z` tag. The workflow checks
+that the tag matches the canonical package version, validates both artifacts
+with `twine check`, and publishes only after those gates pass.
 
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - run: pip install build twine
-      - run: python -m build
-      - run: twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-```
+The workflow is intentionally not exercised by local `make verify`, because
+publishing requires the configured PyPI environment and a release tag.

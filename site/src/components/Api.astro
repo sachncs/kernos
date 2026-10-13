@@ -1,66 +1,22 @@
 ---
 import { highlight } from "../lib/highlight";
+import { snippets } from "../lib/site-snippets";
 
 const tabs = [
   {
     id: "fit",
     label: "Fit & score",
-    code: `import numpy as np
-from kernos import Kernos
-
-rng = np.random.default_rng(42)
-X_train = rng.standard_normal((4000, 8))
-y_train = X_train[:, 0] + 0.5 * X_train[:, 1] ** 2 + 0.1 * rng.standard_normal(4000)
-X_test  = rng.standard_normal((1000, 8))
-
-model = Kernos(
-    dim=64, mbasis=256, abasis=32,
-    ridge=1e-2, steps=500, seed=42,
-).fit(X_train, y_train)
-
-print(f"R² on held-out: {model.score(X_test, y_test):.4f}")
-# → R² on held-out: 0.8923`,
+    code: snippets.fit,
   },
   {
     id: "grid",
     label: "GridSearchCV",
-    code: `from sklearn.model_selection import GridSearchCV
-from kernos import Kernos
-
-param_grid = {
-    "mbasis": [64, 128, 256],
-    "abasis": [16, 32, 64],
-    "ridge":  [1e-3, 1e-2, 1e-1],
-}
-
-search = GridSearchCV(
-    Kernos(seed=42, steps=300),
-    param_grid,
-    cv=5,
-    scoring="r2",
-    n_jobs=-1,
-)
-search.fit(X_train, y_train)
-print(search.best_params_, search.best_score_)`,
+    code: snippets.grid,
   },
   {
     id: "stream",
     label: "Streaming",
-    code: `from kernos import Kernos, Buffer
-
-# O(m²) memory mode — same algorithm, no full ΦᵀΦ cache.
-model = Kernos(
-    mode=Buffer.STREAM,
-    dim=32, mbasis=128, abasis=16,
-    steps=2000, seed=0,
-)
-
-# partial_fit drives the continuous descent; the refresh
-# controller still triggers when the basis drifts.
-for x_batch, y_batch in stream:
-    model.partial_fit(x_batch, y_batch)
-
-print(model.predict(X_test))`,
+    code: snippets.stream,
   },
 ];
 ---
@@ -79,7 +35,7 @@ print(model.predict(X_test))`,
           Familiar surface.<br />Sophisticated internals.
         </h2>
         <p class="reveal mt-5 text-base leading-relaxed text-ink-300">
-          Use Kernos exactly like an sklearn estimator. Tune it with
+          Use Kernos through a familiar scikit-learn-style estimator API. Tune it with
           <span class="font-mono text-ink-100">GridSearchCV</span>. Stream it
           with <span class="font-mono text-ink-100">partial_fit</span>. Drop it
           into a <span class="font-mono text-ink-100">Pipeline</span>.
@@ -116,7 +72,7 @@ print(model.predict(X_test))`,
         </div>
       </div>
 
-      <div class="reveal" id="api-card">
+      <div class="reveal min-w-0" id="api-card">
         <div
           class="gradient-border overflow-hidden rounded-3xl shadow-card"
         >
@@ -132,7 +88,11 @@ print(model.predict(X_test))`,
               {
                 tabs.map((t, i) => (
                   <button
-                    role="tab"
+                role="tab"
+                aria-selected={i === 0 ? "true" : "false"}
+                aria-controls={`panel-${t.id}`}
+                id={`tab-${t.id}`}
+                tabindex={i === 0 ? 0 : -1}
                     data-tab={t.id}
                     class={`rounded-full px-3 py-1 transition ${
                       i === 0
@@ -145,13 +105,16 @@ print(model.predict(X_test))`,
                 ))
               }
             </div>
-            <div class="hidden text-[11px] text-ink-500 sm:block">python 3.10+</div>
+            <div class="hidden text-[11px] text-ink-400 sm:block">python 3.10+</div>
           </div>
 
           {
             tabs.map((t, i) => (
               <pre
                 role="tabpanel"
+                id={`panel-${t.id}`}
+                aria-labelledby={`tab-${t.id}`}
+                tabindex="0"
                 data-panel={t.id}
                 class={`overflow-x-auto px-6 py-6 font-mono text-[13.5px] leading-relaxed text-ink-100 sm:px-8 sm:text-[14px] ${i === 0 ? "" : "hidden"}`}
                 set:html={`<code>${highlight(t.code)}</code>`}
@@ -168,7 +131,7 @@ print(model.predict(X_test))`,
   .hl-k { color: #c084fc; }
   .hl-s { color: #86efac; }
   .hl-n { color: #fcd34d; }
-  .hl-t { color: #7c5cff; }
+  .hl-t { color: #5eead4; }
   .hl-c { color: #71717a; font-style: italic; }
   .hl-v { color: #e4e4e7; }
 </style>
@@ -181,6 +144,8 @@ print(model.predict(X_test))`,
   function activate(id: string) {
     tabButtons?.forEach((b) => {
       const active = b.dataset.tab === id;
+      b.setAttribute("aria-selected", String(active));
+      b.tabIndex = active ? 0 : -1;
       b.classList.toggle("bg-white/10", active);
       b.classList.toggle("text-white", active);
       b.classList.toggle("text-ink-300", !active);
@@ -192,6 +157,17 @@ print(model.predict(X_test))`,
 
   tabButtons?.forEach((b) => {
     b.addEventListener("click", () => activate(b.dataset.tab!));
+    b.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      const buttons = Array.from(tabButtons);
+      const current = buttons.indexOf(b);
+      const next = event.key === "ArrowRight"
+        ? (current + 1) % buttons.length
+        : (current - 1 + buttons.length) % buttons.length;
+      buttons[next].focus();
+      activate(buttons[next].dataset.tab!);
+    });
   });
 
   const observer = new IntersectionObserver(

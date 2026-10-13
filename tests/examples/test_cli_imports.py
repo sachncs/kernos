@@ -25,6 +25,12 @@ from examples.evaluation.reporting.summary import build_summary, write_summary
 class TestEvaluationImports:
     """Top-level import smoke tests."""
 
+    def test_evaluation_root_export_remains_available(self) -> None:
+        """The lazy package boundary preserves the documented root export."""
+        from examples.evaluation import DATASET_REGISTRY
+
+        assert "Diabetes" in DATASET_REGISTRY
+
     def test_registry_contains_canonical_datasets(self) -> None:
         """All canonical datasets registered."""
         expected = {
@@ -129,6 +135,13 @@ class TestEvaluationCLI:
 
         assert callable(main)
 
+    def test_minimal_install_cli_adapters_are_callable(self) -> None:
+        """Optional CLI adapters remain importable without eager datasets imports."""
+        from kernos.cli import analyze_main, eval_main
+
+        assert callable(eval_main)
+        assert callable(analyze_main)
+
 
 class TestBenchmarksImports:
     """Benchmark demos import smoke tests."""
@@ -149,6 +162,30 @@ class TestBenchmarksImports:
 
         mod = importlib.import_module(module_name)
         assert callable(getattr(mod, "main", None)), f"{module_name} missing main()"
+
+    @pytest.mark.parametrize(
+        ("module_name", "result_name"),
+        [
+            ("examples.benchmarks.quickstart", "quickstart.txt"),
+            ("examples.benchmarks.compare_baselines", "compare_baselines.md"),
+            ("examples.benchmarks.memory_modes", "memory_modes.md"),
+            ("examples.benchmarks.ablation_walk", "ablation_walk.md"),
+            ("examples.benchmarks.grid_search_demo", "grid_search.txt"),
+        ],
+    )
+    def test_demo_executes(
+        self, module_name: str, result_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Each shipped synthetic demo runs and writes its documented artifact."""
+        import importlib
+
+        mod = importlib.import_module(module_name)
+        output_dir = tmp_path / module_name.rsplit(".", maxsplit=1)[-1]
+        monkeypatch.setattr(mod, "RESULTS_DIR", output_dir)
+        mod.main()
+        result = output_dir / result_name
+        assert result.is_file()
+        assert result.read_text(encoding="utf-8").strip()
 
 
 class TestBudgetTierDataclass:

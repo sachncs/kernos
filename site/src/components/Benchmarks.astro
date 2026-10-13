@@ -1,11 +1,20 @@
 ---
 import { withBase } from "../lib/base";
+import { benchmarkData } from "../lib/benchmark-data";
 
 const headline = [
-  { label: "Datasets evaluated", value: "9", suffix: "real-world" },
-  { label: "Mean ΔRMSE vs best baseline", value: "−7.99", suffix: "% improvement" },
-  { label: "Win rate vs Nyström", value: "8 / 9", suffix: "across datasets" },
-  { label: "Win rate vs RFF", value: "8 / 9", suffix: "across datasets" },
+  {
+    label: "Datasets evaluated",
+    value: benchmarkData.datasetCount,
+    suffix: "real-world · Small tier",
+  },
+  {
+    label: "Mean ΔRMSE vs best baseline",
+    value: benchmarkData.delta.replace("%", "").replace("-", "−"),
+    suffix: `% improvement · mean across ${benchmarkData.datasetCount} datasets`,
+  },
+  { label: "Win rate vs Nyström", value: benchmarkData.nystromWins, suffix: "datasets · 5 CPU seeds" },
+  { label: "Win rate vs RFF", value: benchmarkData.rffWins, suffix: "datasets · 5 CPU seeds" },
 ];
 
 const paretoImages = [
@@ -18,18 +27,15 @@ const paretoImages = [
 
 <section id="benchmarks" class="relative py-28 sm:py-36">
   <div class="container-page">
-    <div class="mx-auto max-w-3xl text-center">
-      <span class="chip reveal">
-        <span class="chip-dot"></span>
-        Benchmarks
-      </span>
+    <div class="max-w-4xl">
+      <span class="section-kicker reveal">Evidence</span>
       <h2
-        class="reveal mt-5 font-display text-3xl font-semibold tracking-tight gradient-text sm:text-5xl"
+        class="reveal mt-5 max-w-3xl font-display text-3xl font-semibold tracking-tight text-ink-50 sm:text-5xl"
       >
         Measured against the best of the rest.
       </h2>
       <p
-        class="reveal mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-ink-300"
+        class="reveal mt-5 max-w-2xl text-balance text-base leading-relaxed text-ink-300"
       >
         Kernos was evaluated against Ridge, Nyström, and Random Fourier Features
         on nine real-world regression datasets. The refresh-aware variant beats
@@ -42,7 +48,7 @@ const paretoImages = [
       {
         headline.map((m) => (
           <div class="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.04] to-transparent p-6">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-ink-500">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-ink-400">
               {m.label}
             </div>
             <div class="mt-3 flex items-baseline gap-2">
@@ -56,21 +62,27 @@ const paretoImages = [
       }
     </div>
 
+    <p class="reveal mt-5 text-center text-[12px] leading-relaxed text-ink-400">
+      Summary scope: Small budget tier, five controlled CPU seeds, mean RMSE
+      across the evaluated datasets. Results are descriptive; hardware and
+      dataset changes can alter the outcome.
+    </p>
+
     <div class="reveal mt-12 overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-b from-white/[0.025] to-transparent">
       <div
         class="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.05] px-6 py-4"
       >
         <div>
-          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-500">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-400">
             Pareto plots — RMSE vs train time
           </div>
           <h3 class="mt-1 font-display text-lg font-semibold tracking-tight text-ink-50">
-            Kernos dominates the lower-left frontier.
+          RMSE and training time, shown together.
           </h3>
         </div>
         <div class="flex items-center gap-4 text-[12px] text-ink-300">
           <span class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full" style="background:#7c5cff"></span>
+            <span class="h-2.5 w-2.5 rounded-full" style="background:#2dd4bf"></span>
             Kernos
           </span>
           <span class="flex items-center gap-2">
@@ -109,11 +121,11 @@ const paretoImages = [
     <div class="reveal mt-12 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
       <div class="overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-b from-white/[0.025] to-transparent">
         <div class="border-b border-white/[0.05] px-6 py-4">
-          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-500">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-400">
             Ablation impact
           </div>
           <h3 class="mt-1 font-display text-lg font-semibold tracking-tight text-ink-50">
-            The refresh mechanism is doing the work.
+            Refresh is a measured trade-off, not a universal win.
           </h3>
         </div>
         <div class="p-6">
@@ -123,48 +135,44 @@ const paretoImages = [
             loading="lazy"
             class="w-full rounded-xl border border-white/[0.05]"
           />
+          <p class="mt-4 text-[12px] leading-relaxed text-ink-400">
+            On this recorded sweep, disabling refresh improves RMSE for some
+            datasets. Treat refresh as a controllable adaptation mechanism and
+            validate it against your workload rather than assuming it always
+            improves accuracy.
+          </p>
         </div>
       </div>
 
       <div class="rounded-3xl border border-white/[0.06] bg-gradient-to-b from-white/[0.025] to-transparent p-6">
-        <div class="text-[11px] uppercase tracking-[0.18em] text-ink-500">
+        <div class="text-[11px] uppercase tracking-[0.18em] text-ink-400">
           Per-dataset ranking
         </div>
         <h3 class="mt-1 font-display text-lg font-semibold tracking-tight text-ink-50">
-          Competitive on every benchmark.
+          A transparent per-dataset view.
         </h3>
 
         <ul class="mt-5 divide-y divide-white/[0.05]">
           {
-            [
-              { name: "Abalone", rank: 6, total: 11 },
-              { name: "CaliforniaHousing", rank: 3, total: 11 },
-              { name: "CPUActivity", rank: 2, total: 11 },
-              { name: "Elevators", rank: 5, total: 11 },
-              { name: "HouseSales", rank: 3, total: 11 },
-              { name: "Kin8nm", rank: 4, total: 11 },
-              { name: "Superconduct", rank: 3, total: 11 },
-              { name: "WineQuality", rank: 3, total: 11 },
-              { name: "YearPredictionMSD", rank: 3, total: 11 },
-            ].map((d) => (
+            benchmarkData.rankings.map((d) => (
               <li class="flex items-center justify-between py-2.5 text-[13px]">
                 <span class="text-ink-200">{d.name}</span>
                 <div class="flex items-center gap-3">
                   <div class="h-1.5 w-28 bg-white/[0.05]">
                     <div
-                      class="h-full bg-gradient-to-r from-accent-500 to-blue-500"
+                      class="h-full bg-gradient-to-r from-accent-500 to-teal-400"
                       style={`width:${(1 - (d.rank - 1) / d.total) * 100}%`}
                     />
                   </div>
                   <span class="font-mono text-ink-100">
-                    #{d.rank} <span class="text-ink-500">/ {d.total}</span>
+                    #{d.rank} <span class="text-ink-400">/ {d.total}</span>
                   </span>
                 </div>
               </li>
             ))
           }
         </ul>
-        <p class="mt-5 text-[12px] text-ink-500">
+        <p class="mt-5 text-[12px] text-ink-400">
           Lower rank is better. Across nine datasets, Kernos lands in the top
           half of eleven models on every one.
         </p>
@@ -179,6 +187,29 @@ const paretoImages = [
       <code class="rounded-md border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 font-mono text-ink-200">
         kernos-analyze --results results/results.csv
       </code>
+    </div>
+
+    <div class="reveal mx-auto mt-10 max-w-4xl rounded-2xl border border-accent-400/20 bg-accent-400/[0.05] p-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-3">
+        <h3 class="font-display text-lg font-semibold tracking-tight text-ink-50">
+          How to read these results
+        </h3>
+        <a
+          href="https://github.com/sachncs/kernos/blob/master/docs/evaluation-protocol.md"
+          class="text-[12px] text-accent-300 underline decoration-accent-300/40 underline-offset-4 hover:text-white"
+        >
+          Full evaluation protocol →
+        </a>
+      </div>
+      <div class="mt-4 grid gap-4 text-[13px] leading-relaxed text-ink-300 sm:grid-cols-2 lg:grid-cols-4">
+        <p><strong class="text-ink-100">Splits:</strong> 70 / 15 / 15 train, validation and test, scaled on train only.</p>
+        <p><strong class="text-ink-100">Stability:</strong> five controlled CPU seeds; tables report mean ± standard deviation.</p>
+        <p><strong class="text-ink-100">Budgets:</strong> Small, Medium and Large tiers vary basis size and training horizon.</p>
+        <p><strong class="text-ink-100">Metrics:</strong> RMSE, train time, peak Python allocation, refresh count and condition proxy. Native RSS is not measured in this table.</p>
+      </div>
+      <p class="mt-4 text-[12px] text-ink-400">
+        These headline aggregates are descriptive, not a guarantee for every dataset or hardware configuration. Re-run the pinned protocol before drawing a performance conclusion.
+      </p>
     </div>
   </div>
 </section>

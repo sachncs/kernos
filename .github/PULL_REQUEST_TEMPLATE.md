@@ -24,7 +24,7 @@ Describe the tests you ran or added to verify your changes:
 ## Checklist
 
 - [ ] My code follows the existing style of this project
-- [ ] I have run `ruff check .` and `black --check .` with no errors
+- [ ] I have run `ruff check .` and `ruff format --check .` with no errors
 - [ ] I have run `mypy --strict kernos/` with no errors
 - [ ] I have added or updated docstrings for new/changed functions
 - [ ] All new and existing tests pass

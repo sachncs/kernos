@@ -21,6 +21,13 @@ def kmeanspp(X: Array, k: int, rng: np.random.Generator) -> Array:
     Raises:
         ValueError: When ``k > samples``.
     """
+    check(X.ndim == 2, f"X must be 2-D, got shape {X.shape}")
+    check(X.shape[0] > 0 and X.shape[1] > 0, "X must be non-empty")
+    check(bool(np.isfinite(X).all()), "X must contain only finite values")
+    check(
+        isinstance(k, (int, np.integer)) and not isinstance(k, (bool, np.bool_)),
+        f"k must be an integer, got {k!r}",
+    )
     samples = X.shape[0]
     check(k <= samples, f"k ({k}) must be <= samples ({samples})")
     check(k >= 1, f"k must be >= 1, got {k}")

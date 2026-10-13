@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from kernos.core.error import ShapeError
-from kernos.core.types import Array
+from kernos.core.types import Array, check
 from kernos.numeric import clipeig, epsilon, retain, truncate
 
 
@@ -18,6 +18,10 @@ class Whitening:
     """Build a soft-truncated whitening map from a landmark kernel matrix."""
 
     def __init__(self, tau: float, alpha: float, eps: float) -> None:
+        """Initialize spectral truncation and numerical stability thresholds."""
+        check(bool(np.isfinite(tau)) and tau > 0.0, "tau must be finite and positive")
+        check(bool(np.isfinite(alpha)) and alpha > 0.0, "alpha must be finite and positive")
+        check(bool(np.isfinite(eps)) and eps > 0.0, "eps must be finite and positive")
         self.tau = tau
         self.alpha = alpha
         self.eps = eps
@@ -27,6 +31,10 @@ class Whitening:
 
         ``W[i, j] = exp(-gamma * ||Z[i] - Z[j]||^2)``.
         """
+        check(Z.ndim == 2, f"Z must be 2-D, got shape {Z.shape}")
+        check(Z.shape[0] > 0, "Z must contain at least one landmark")
+        check(bool(np.isfinite(Z).all()), "Z must contain only finite values")
+        check(bool(np.isfinite(gamma)) and gamma > 0.0, "gamma must be finite and positive")
         diff = Z[:, None, :] - Z[None, :, :]
         squared = np.sum(diff * diff, axis=-1)
         return np.exp(-gamma * squared)
@@ -44,6 +52,9 @@ class Whitening:
         Raises:
             ShapeError: When ``W`` is degenerate (``rank == 0``).
         """
+        check(W.ndim == 2 and W.shape[0] > 0 and W.shape[0] == W.shape[1], "W must be non-empty and square")
+        check(bool(np.isfinite(W).all()), "W must contain only finite values")
+        check(np.allclose(W, W.T), "W must be symmetric")
         eigenvalues, eigenvectors = np.linalg.eigh(W)
         eigenvalues = clipeig(eigenvalues, 0.0)
         indices, rank = retain(eigenvalues, self.tau)

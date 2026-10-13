@@ -29,7 +29,7 @@ kernos/
 ├── numeric.py          # Eigenvalue clip, soft truncation, chol, pcg, drift
 ├── linalg.py           # Linear-algebra helpers
 ├── sample.py           # k-means++, farthest-point sampling
-└── estimator.py        # Sklearn-compatible Kernos estimator
+└── estimator.py        # Scikit-learn-style Kernos estimator
 ```
 
 ## Pipeline
@@ -105,9 +105,17 @@ A refresh triggers only when: drift > threshold AND cooldown elapsed AND warmup 
 
 `Continuous`, `Discrete`, and `Bundle` are frozen dataclasses with `replace` methods (via `dataclasses.replace`). This makes refresh boundaries explicit and avoids surprising mutations during the discrete pipeline.
 
-### Duck-Typed Interfaces
+### Typed Polymorphic Interfaces
 
-Core abstractions (`Embed`, `Basis`, `Refresh`, `Solver`, `Drift`, `Cache`) are consumed via the same `forward` / `run` / `solve` method names rather than `typing.Protocol`. This keeps modules decoupled without the ceremony of explicit protocol declarations.
+Interchangeable components implement the contracts in
+`kernos.core.interfaces`: `FeatureMap`, `Solver`, `ResidualSolver`,
+`Orthogonalizer`, and `DriftMetric`. These are structural `typing.Protocol`
+interfaces, so built-in implementations do not need inheritance while custom
+components can be injected and type-checked against an explicit contract.
+The public string selectors are resolved in `kernos.core.factory`; the loop
+consumes the resulting protocol objects, keeping strategy selection out of the
+training algorithm. The registries are the composition seam for future plugin
+registration and fault-injected test doubles.
 
 ### Numerical Hardening
 
@@ -131,7 +139,9 @@ All numerical thresholds are centralized as `stab_*` fields on `Plan`:
 
 ### Custom Embedder
 
-Subclass or compose any object that exposes `forward(X) -> ndarray` and a `params()` pair; pass it into `Loop.initialize` or override `Kernos.build_plan` to swap the `Linear` embedder.
+Subclass or compose any object that exposes `forward(X) -> ndarray` and a
+`params()` pair; register a factory in `kernos.core.factory` or provide a
+custom loop composition to swap the `Linear` embedder.
 
 ### Alternative Refresh Policy
 
@@ -139,7 +149,10 @@ Replace `Policy.decide` with a custom decision rule and pass it into `Loop.__ini
 
 ### Alternative Solver
 
-`kernos.solver` ships `Direct` (Cholesky), `Iterative` (PCG), `Woodbury`, and `Jacobi`. All expose the same `solve(phi, y)` signature so the `Loop` can be parameterised.
+`kernos.solver` ships `Direct` (Cholesky), `Iterative` (PCG), `Woodbury`, and
+`Jacobi`. All expose the same `solve(phi, y)` signature; the registered
+`Direct`, `Iterative`, and `Woodbury` implementations are selected through the
+typed solver factory.
 
 ## Testing Strategy
 

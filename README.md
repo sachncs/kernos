@@ -2,7 +2,7 @@
   <h1 align="center">Kernos</h1>
   <p align="center">Refresh-aware hybrid continuous-discrete low-rank kernel learning for scalable, adaptive kernel regression.</p>
   <p align="center">
-    <a href="#installation"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue" alt="Python"></a>
+    <a href="#installation"><img src="https://img.shields.io/badge/python-3.10%20%E2%80%93%203.14-blue" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
     <a href="https://github.com/sachncs/kernos/releases/latest"><img src="https://img.shields.io/github/v/release/sachncs/kernos" alt="Latest release"></a>
     <a href="https://github.com/sachncs/kernos/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/kernos/ci.yml?branch=master" alt="CI"></a>
@@ -35,7 +35,7 @@ You, if any of these sound like you:
 
 - You're a researcher benchmarking **kernel methods** on tabular regression.
 - You want an **adaptive basis** that refreshes landmarks only when it needs to, instead of every epoch.
-- You use **scikit-learn** and want a drop-in estimator that supports `fit` / `predict` / `score` / `GridSearchCV`.
+- You use **scikit-learn** and want an estimator with the familiar `fit` / `predict` / `score` / `GridSearchCV` interface.
 - You train on **large datasets** and need a memory mode that scales (cached `O(nm)` or streamed `O(m²)`).
 - You're curious about **refresh-aware hybrid optimization** as a research direction.
 
@@ -51,7 +51,8 @@ You, if any of these sound like you:
 - **Refresh controller** — Drift-aware trigger with cooldown, warmup, hysteresis, and amortized budget.
 - **Two memory modes** — Cached `O(nm)` and streamed `O(m²)` for different scale regimes.
 - **Numerical stabilization** — Eigenvalue clipping, soft spectral truncation, Cholesky with jitter fallback.
-- **Sklearn-compatible API** — `fit`, `predict`, `score` with `GridSearchCV` and `Pipeline` support.
+- **Resource guardrails** — Optional `memory_limit_mb` preflight checks reject oversized fits before feature allocation.
+- **Scikit-learn-style API** — `fit`, `predict`, `score` with `GridSearchCV` and `Pipeline` integration where the configured data-capacity contract is satisfied.
 
 ---
 
@@ -70,7 +71,7 @@ and `matplotlib` (install with the `examples` extra — see below).
 
 If you're unsure which Python is on your machine, open a terminal and
 type `python3 --version`. If the version starts with `3.10`, `3.11`,
-or `3.12`, you're set.
+`3.12`, `3.13`, or `3.14`, you're set.
 
 ---
 
@@ -102,6 +103,9 @@ pip install -e ".[dev,examples]"
 
 `dev` pulls in pytest, mypy, and ruff. `examples` pulls in HuggingFace
 `datasets` and `matplotlib` for the evaluation suite and plots.
+
+The repository also commits `uv.lock`. Contributors using uv can create the
+locked development environment with `uv sync --locked`.
 
 ---
 
@@ -225,7 +229,7 @@ complete reference.
 
 | Symbol | Type | Plain English |
 |---|---|---|
-| `Kernos` | class | The sklearn-compatible estimator. |
+| `Kernos` | class | The estimator with a scikit-learn-style interface. Configure `mbasis`, `abasis` and dataset size consistently. |
 | `Kernos.fit(X, y)` | method | Fit on training data. |
 | `Kernos.predict(X)` | method | Predict targets for new data. |
 | `Kernos.score(X, y)` | method | R² score on test data. |
@@ -300,7 +304,7 @@ kernos/
 ├── kernos/                    # SDK package
 │   ├── __init__.py            # Public API exports (Kernos)
 │   ├── _version.py            # PEP 440 version
-│   ├── estimator.py           # Sklearn-compatible Kernos estimator
+│   ├── estimator.py           # Scikit-learn-style Kernos estimator
 │   ├── numeric.py             # Eigenvalue clip, soft truncation, chol, pcg, drift
 │   ├── linalg.py              # Linear-algebra helpers
 │   ├── sample.py              # k-means++, farthest-point sampling
@@ -336,6 +340,8 @@ kernos/
 - **[Evaluation suite](examples/evaluation/)** — real-world benchmarks with `kernos-eval`.
 - **[Evaluation Protocol](docs/evaluation-protocol.md)** — methodology.
 - **[FAQ](docs/faq.md)** — common questions.
+- **[API Reference](docs/api-reference.md)** — supported imports, lifecycle,
+  diagnostics and extension protocols.
 
 **Operators / Maintainers:**
 
@@ -351,8 +357,8 @@ kernos/
 ```bash
 pip install -e ".[dev,examples]"
 pytest tests/ -v
-ruff check kernos/ tests/ examples/
-ruff format kernos/ tests/ examples/
+ruff check kernos/ tests/ examples/ scripts/
+ruff format kernos/ tests/ examples/ scripts/
 mypy kernos/ examples/
 ```
 
@@ -362,7 +368,9 @@ mypy kernos/ examples/
 - Quotes: double (`"`).
 - Formatting: `ruff format`.
 - Type hints: required on all public signatures (mypy `--strict`).
-- No semi-private naming (`_foo`) — all identifiers are public.
+- A single leading underscore marks a module-private implementation detail;
+  public names are documented and supported. See the
+  [API reference](docs/api-reference.md) for the full visibility contract.
 
 ### Commit conventions
 
@@ -419,9 +427,10 @@ python -m build
 
 ## Roadmap
 
-- **v0.1.0** — Current release: core implementation, sklearn API, test suite.
-- **v0.2.0** — GPU solver backend (CuPy), learned embedding functions.
-- **v1.0.0** — Stable API, streaming/incremental `fit`.
+- **v0.2.0** — Current release: refresh-aware estimator, streaming modes,
+  typed extension contracts and production validation gates.
+- **Future** — GPU solver backends and learned embedding functions.
+- **v1.0.0** — Stable API and expanded compatibility guarantees.
 
 ---
 

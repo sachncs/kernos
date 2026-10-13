@@ -23,8 +23,10 @@ def main() -> None:
     X = rng.standard_normal((300, 4))
     y = X[:, 0] + 0.5 * X[:, 1] ** 2 + 0.1 * rng.standard_normal(300)
 
-    param_grid = {"mbasis": [16, 32], "abasis": [4, 8], "ridge": [1e-2, 1e-1]}
-    search = GridSearchCV(Kernos(seed=42, steps=50), param_grid, cv=3, n_jobs=1)
+    param_grid = {"mbasis": [16, 32], "abasis": [2, 4], "ridge": [1e-2, 1e-1]}
+    # ``lk`` is a model invariant: it cannot exceed the sampled anchor basis.
+    # Keep the default below the smallest grid value so every candidate is valid.
+    search = GridSearchCV(Kernos(seed=42, steps=50, lk=2), param_grid, cv=3, n_jobs=1)
     search.fit(X, y)
 
     print(f"  best_params_: {search.best_params_}")

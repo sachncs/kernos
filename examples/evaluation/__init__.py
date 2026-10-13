@@ -16,6 +16,13 @@ Sub-modules:
 
 from __future__ import annotations
 
-from examples.evaluation.datasets.registry import DATASET_REGISTRY
-
 __all__ = ["DATASET_REGISTRY"]
+
+
+def __getattr__(name: str) -> object:
+    """Load optional evaluation exports only when they are requested."""
+    if name == "DATASET_REGISTRY":
+        from examples.evaluation.datasets.registry import DATASET_REGISTRY
+
+        return DATASET_REGISTRY
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

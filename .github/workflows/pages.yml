@@ -15,6 +15,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  browser-matrix:
+    name: Browser smoke (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: site/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build site
+        run: npm run build
+      - name: Install browser engine
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Run browser smoke test
+        run: npm run test:browser
+        env:
+          BROWSER: ${{ matrix.browser }}
+
   build:
     name: Build site
     runs-on: ubuntu-latest
@@ -36,10 +66,25 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Run site smoke tests
+        run: npm test
+
       - name: Build
         run: npm run build
         env:
           NODE_ENV: production
+
+      - name: Check built accessibility contract
+        run: npm run test:accessibility
+
+      - name: Install Chromium for browser smoke test
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser smoke test
+        run: npm run test:browser
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
@@ -58,3 +103,17 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Verify deployed artifact
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if SITE_BASE_URL="$PAGE_URL" npm run test:live; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "deployed site did not satisfy the live contract" >&2
+          exit 1

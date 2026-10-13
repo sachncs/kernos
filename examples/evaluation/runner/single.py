@@ -22,8 +22,8 @@ def run_single_kernos(
 ) -> SingleRunResult:
     """Fit Kernos on ``(X_train, y_train)``, predict on ``X_test``.
 
-    Tracks wall-clock fit/predict time and peak memory via
-    :mod:`tracemalloc`. Computes RMSE/MAE/R² plus a condition proxy
+    Tracks wall-clock fit/predict time and peak Python allocations via
+    :mod:`tracemalloc` (not native RSS). Computes RMSE/MAE/R² plus a condition proxy
     ``κ(ΦᵀΦ + λI)`` and a discrete refresh count.
     """
     tracemalloc.start()

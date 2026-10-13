@@ -40,7 +40,19 @@ def main() -> None:
     rows: list[tuple[str, float, float]] = []
 
     def _fit(ablation: dict[str, bool]) -> Kernos:
-        model = Kernos(seed=42, mbasis=64, abasis=16, steps=50, noref=False, nohyst=False, nocool=False, noresid=False, noorth=False, nodiv=False, nofreeze=False)
+        model = Kernos(
+            seed=42,
+            mbasis=64,
+            abasis=16,
+            steps=50,
+            noref=False,
+            nohyst=False,
+            nocool=False,
+            noresid=False,
+            noorth=False,
+            nodiv=False,
+            nofreeze=False,
+        )
         for k, v in ablation.items():
             setattr(model, k, v)
         return model.fit(X_train, y_train)

@@ -1,13 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "kernos"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Refresh-aware hybrid continuous-discrete low-rank kernel learning"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
     {name = "Sachin", email = "sachncs@gmail.com"},
@@ -16,11 +17,12 @@ keywords = ["kernel", "machine-learning", "nystrom", "ridge-regression"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
@@ -34,9 +36,14 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "mypy>=1.5",
-    "ruff>=0.1.0",
+    "ruff>=0.17.0",
+    "hypothesis>=6.0",
     "datasets>=2.0",
     "matplotlib>=3.5",
+    "build>=1.2",
+    "pre-commit>=4.0",
+    "pip-audit>=2.7",
+    "twine>=5.0",
 ]
 examples = [
     "datasets>=2.0",
@@ -44,8 +51,8 @@ examples = [
 ]
 
 [project.scripts]
-kernos-eval = "examples.evaluation.cli:main"
-kernos-analyze = "examples.evaluation.analyze_cli:main"
+kernos-eval = "kernos.cli:eval_main"
+kernos-analyze = "kernos.cli:analyze_main"
 
 [project.urls]
 Homepage = "https://github.com/sachncs/kernos"
@@ -57,6 +64,9 @@ Documentation = "https://github.com/sachncs/kernos/tree/master/docs"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["kernos*", "examples*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "kernos._version.__version__"}
 
 [tool.mypy]
 python_version = "3.10"
@@ -79,6 +89,7 @@ lint.select = [
     "B",
     "C4",
     "SIM",
+    "D",
 ]
 lint.ignore = [
     "E501",
@@ -88,6 +99,7 @@ lint.ignore = [
     "N818",
     "E741",
 ]
+lint.per-file-ignores = { "tests/**/*.py" = ["D"], "examples/**/*.py" = ["D"] }
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

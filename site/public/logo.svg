@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="kernos logo">
-  <title>kernos</title>
-  <rect width="512" height="512" rx="96" fill="#3776AB"/>
-  <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle"
-        font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
-        font-size="280" font-weight="700" fill="#FFFFFF">K</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title">
+  <title id="title">kernos adaptive kernel mark</title>
+  <rect width="512" height="512" rx="128" fill="#12201f"/>
+  <rect x="4" y="4" width="504" height="504" rx="124" fill="none" stroke="#2dd4bf" stroke-opacity=".35" stroke-width="8"/>
+  <path d="M136 184 C200 112 312 112 376 184" fill="none" stroke="#f97316" stroke-width="40" stroke-linecap="round"/>
+  <path d="M136 328 C200 400 312 400 376 328" fill="none" stroke="#f4f1ea" stroke-opacity=".9" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="136" cy="184" r="40" fill="#fdba74"/>
+  <circle cx="376" cy="184" r="40" fill="#2dd4bf"/>
+  <circle cx="256" cy="328" r="40" fill="#f4f1ea"/>
 </svg>

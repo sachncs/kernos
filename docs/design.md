@@ -94,7 +94,8 @@ Frozen configuration (`Plan`), state containers (`Continuous`, `Discrete`,
 
 ### `kernos.estimator`
 
-- `Kernos`: Sklearn-compatible public API wrapping `Loop`.
+- `Kernos`: scikit-learn-style public API wrapping `Loop`; fitted capacity
+  remains explicitly constrained by the configured basis and validation sizes.
 
 ## Key Design Decisions
 
@@ -104,12 +105,21 @@ Frozen configuration (`Plan`), state containers (`Continuous`, `Discrete`,
 methods (delegating to `dataclasses.replace`). This makes refresh boundaries
 explicit and avoids surprising mutations during the discrete pipeline.
 
-### Duck-Typed Interfaces
+### Protocol Interfaces and Polymorphism
 
-Core abstractions (`Embed`, `Basis`, `Refresh`, `Solver`, `Drift`, `Cache`)
-are consumed via the same `forward` / `run` / `solve` method names rather
-than `typing.Protocol`. This keeps modules decoupled without the ceremony of
-explicit protocol declarations.
+Core extension points are structural `typing.Protocol` contracts in
+`kernos.core.interfaces`: `FeatureMap`, `Basis`, `RefreshPipeline`, `Solver`,
+`ResidualSolver`, `DriftMetric`, `Orthogonalizer`, `FeatureFusion`,
+`AnchorSampler`, `WhiteningMap`, `OuterStep`, `BudgetAccountant`, and
+`RefreshPolicy`. Concrete implementations such as `Linear`/`Identity`,
+`Nystrom`/`Greedy`, `Direct`/`Iterative`/`Woodbury`, and
+`Frobenius`/`Spectral` are interchangeable through these contracts.
+
+`LoopComponents` assembles the runtime object graph, while factory registries
+translate validated configuration names into concrete strategies. This keeps
+the public estimator simple, enables dependency injection and fault
+simulation, and gives extension authors polymorphic seams without forcing
+every implementation into a deep inheritance hierarchy.
 
 ### Numerical Hardening
 
