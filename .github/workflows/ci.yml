@@ -221,7 +221,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download host benchmark artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: resource-benchmark-*
           path: resource-artifacts
